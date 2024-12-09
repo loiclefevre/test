@@ -14,6 +14,7 @@ public class Main {
 
 	static {
 		Locale.setDefault(Locale.US);
+		System.setProperty("java.net.useSystemProxies", "true");
 	}
 
 	public static final String VERSION = "0.0.1";

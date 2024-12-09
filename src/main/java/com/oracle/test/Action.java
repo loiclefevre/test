@@ -6,7 +6,7 @@ public enum Action {
 
 	private final String banner;
 
-	Action(String banner) {
+	Action(final String banner) {
 		this.banner = banner;
 	}
 
