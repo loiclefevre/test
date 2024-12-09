@@ -47,20 +47,24 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven
         run: mvn -B -ntp verify -P native
-      - name: Upload native image
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-${{ matrix.os }}
-          path: ${{ github.workspace }}/target
+      - name: Create tar archive
+        run: |
+          tar -cvf test-${{ runner.os }}.tar ${{ github.workspace }}/target/test-${{ runner.os }}
+          gzip ${{ github.workspace }}/test-${{ runner.os }}.tar
+#      - name: Upload native image
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: test-${{ runner.os }}
+#          path: ${{ github.workspace }}/target
       - name: Releasing...
         uses: softprops/action-gh-release@v2
         if: success() && startsWith(github.ref, 'refs/tags/')
         with:
-#          files: ${{ github.workspace }}/target/test-${{ matrix.os }}
+          files: ${{ github.workspace }}/test-${{ runner.os }}.tar.gz
           draft: false
           prerelease: false
           make_latest: true
-          name: Test v${{ github.HEAD_TAG }}
-          tag_name: ${{ github.HEAD_TAG }}
+          name: Test v${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
 #          body_path: CHANGELOG.md
           generate_release_notes: true
