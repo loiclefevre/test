@@ -47,28 +47,57 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven
         run: mvn -B -ntp verify -P native
-      - name: Create tar archive
-        if: success() && ( matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest' )
+      - name: Create Linux archive
+        if: success() && matrix.os == 'ubuntu-latest'
         run: |
-          tar -cvf ${{ github.workspace }}/test-${{ matrix.os }}.tar ${{ github.workspace }}/target/test
-          gzip ${{ github.workspace }}/test-${{ matrix.os }}.tar
+          tar -cvf ${{ github.workspace }}/test-linux-x86_64.tar ${{ github.workspace }}/target/test
+          gzip ${{ github.workspace }}/test-linux-x86_64.tar
+      - name: Create MAC OS archive
+        if: success() && matrix.os == 'macos-latest'
+        run: |
+          tar -cvf ${{ github.workspace }}/test-macos-aarch64.tar ${{ github.workspace }}/target/test
+          gzip ${{ github.workspace }}/test-macos-aarch64.tar
       - name: Create zip archive
         if: success() && matrix.os == 'windows-latest'
-        run: Compress-Archive -Path ${{ github.workspace }}/test.exe -Destination ${{ github.workspace }}/test-${{ matrix.os }}.zip
+        run: Compress-Archive -Path ${{ github.workspace }}\\test.exe -Destination ${{ github.workspace }}\\test-windows_x86_64.zip
 #      - name: Upload native image
 #        uses: actions/upload-artifact@v4
 #        with:
 #          name: test-${{ runner.os }}
 #          path: ${{ github.workspace }}/target
-      - name: Releasing...
+      - name: Releasing Linux...
         uses: softprops/action-gh-release@v2
-        if: success() && startsWith(github.ref, 'refs/tags/')
+        if: success() && matrix.os == 'ubuntu-latest' && startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ github.workspace }}/test-${{ runner.os }}.tar.gz
+          files: ${{ github.workspace }}/test-linux-x86_64.tar.gz
           draft: false
           prerelease: false
           make_latest: true
           name: Test v${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
 #          body_path: CHANGELOG.md
+          generate_release_notes: true
+      - name: Releasing MAC OS...
+        uses: softprops/action-gh-release@v2
+        if: success() && matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ github.workspace }}/test-macos-aarch64.tar.gz
+          draft: false
+          prerelease: false
+          make_latest: true
+          name: Test v${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          #          body_path: CHANGELOG.md
+          generate_release_notes: true
+      - name: Releasing Windows...
+        uses: softprops/action-gh-release@v2
+        if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ github.workspace }}\\test-windows_x86_64.zip
+          draft: false
+          prerelease: false
+          make_latest: true
+          name: Test v${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          #          body_path: CHANGELOG.md
           generate_release_notes: true
