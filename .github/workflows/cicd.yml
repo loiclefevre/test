@@ -48,12 +48,12 @@ jobs:
       - name: Build with Maven
         run: mvn -B -ntp verify -P native
       - name: Create tar archive
-        if: success() && ( ${{ matrix.os }} == 'macos-latest' || ${{ matrix.os }} == 'ubuntu-latest' )
+        if: success() && ( matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest' )
         run: |
           tar -cvf ${{ github.workspace }}/test-${{ matrix.os }}.tar ${{ github.workspace }}/target/test
           gzip ${{ github.workspace }}/test-${{ matrix.os }}.tar
       - name: Create zip archive
-        if: success() && ( ${{ matrix.os }} == 'windows-latest' )
+        if: success() && matrix.os == 'windows-latest'
         run: Compress-Archive -Path ${{ github.workspace }}/test.exe -Destination ${{ github.workspace }}/test-${{ matrix.os }}.zip
 #      - name: Upload native image
 #        uses: actions/upload-artifact@v4

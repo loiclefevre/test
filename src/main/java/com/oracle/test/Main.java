@@ -28,6 +28,7 @@ public class Main {
 		try {
 			session = new Session(args);
 			session.banner();
+			session.run();
 		}
 		catch (TestException te) {
 			exitStatus = te.getErrorCode();

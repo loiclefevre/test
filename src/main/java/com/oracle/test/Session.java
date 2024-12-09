@@ -76,4 +76,8 @@ public class Session {
 			System.out.printf("Test%n");
 		}
 	}
+
+	public void run() {
+		System.out.printf("%s%n", action.getBanner());
+	}
 }
