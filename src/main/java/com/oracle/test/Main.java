@@ -2,6 +2,10 @@ package com.oracle.test;
 
 import com.oracle.test.exception.TestException;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.util.Locale;
 
 /**
@@ -46,7 +50,7 @@ public class Main {
 			}
 
 			System.out.println("Error: " + te.getMessage());
-			// te.printStackTrace();
+			te.printStackTrace();
 		}
 
 		System.exit(exitStatus);
