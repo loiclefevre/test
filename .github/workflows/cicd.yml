@@ -59,6 +59,12 @@ jobs:
           allowUpdates: true
           artifactErrorsFailBuild: true
           makeLatest: true
-          artifacts: "${{ github.workspace }}/target/test-${{ matrix.os }}"
+          draft: false
+          prerelease: false
+          release_name: v${{ github.ref }}
 #          bodyFile: "body.md"
           generateReleaseNotes: true
+          tag_name: ${{ github.ref }}
+#          body_path: CHANGELOG.md
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
