@@ -18,12 +18,55 @@
         <maven.compiler.target>23</maven.compiler.target>
         <maven.compiler.release>23</maven.compiler.release>
         <maven.plugin.validation>VERBOSE</maven.plugin.validation>
-        <native.maven.plugin.version>0.10.3</native.maven.plugin.version>
+        <native.maven.plugin.version>LATEST</native.maven.plugin.version>
         <imageName>test</imageName>
     </properties>
 
     <dependencies>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native.maven.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <skip>false</skip>
+                            <imageName>${imageName}</imageName>
+                            <fallback>false</fallback>
+                            <agent>
+                                <enabled>false</enabled>
+                            </agent>
+                            <buildArgs>
+                                <buildArg>-march=native</buildArg>
+                            </buildArgs>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
