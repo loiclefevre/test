@@ -18,7 +18,7 @@
         <maven.compiler.target>23</maven.compiler.target>
         <maven.compiler.release>23</maven.compiler.release>
         <maven.plugin.validation>VERBOSE</maven.plugin.validation>
-        <native.maven.plugin.version>LATEST</native.maven.plugin.version>
+        <native.maven.plugin.version>0.10.3</native.maven.plugin.version>
         <imageName>test</imageName>
     </properties>
 
