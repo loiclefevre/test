@@ -18,7 +18,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: Linux ${{ matrix.os }}
+    name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-${{ matrix.os }}
-          path: target/test*
+          path: target/test
