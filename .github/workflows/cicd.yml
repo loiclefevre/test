@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-${{ matrix.os }}
-          path: test*
+          path: target/test*
