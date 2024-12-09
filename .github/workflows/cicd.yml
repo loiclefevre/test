@@ -65,5 +65,3 @@ jobs:
 #          body_path: CHANGELOG.md
           fail_on_unmatched_files: true
           generate_release_notes: true
-          env:
-            GITHUB_TOKEN: ${{ github.token }}
