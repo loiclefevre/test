@@ -60,8 +60,7 @@ jobs:
           draft: false
           prerelease: false
           make_latest: true
-          name: Test v${{ github.ref }}
-          tag_name: ${{ github.ref }}
+          name: Test v${{ github.HEAD_TAG }}
+          tag_name: ${{ github.HEAD_TAG }}
 #          body_path: CHANGELOG.md
-          fail_on_unmatched_files: true
           generate_release_notes: true
