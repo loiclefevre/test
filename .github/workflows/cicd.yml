@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build:
     permissions:
-      contents: read
+      contents: write
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -48,3 +48,12 @@ jobs:
         with:
           name: test-${{ matrix.os }}
           path: target/test
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          makeLatest: true
+          artifacts: "test-*"
+#          bodyFile: "body.md"
+          generateReleaseNotes: true
