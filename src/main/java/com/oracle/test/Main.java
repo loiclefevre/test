@@ -42,7 +42,6 @@ public class Main {
 						System.out.printf("Skip testing check failed (%d)%n", exitStatus);
 						break;
 				}
-
 			}
 
 			System.out.println("Error: " + te.getMessage());

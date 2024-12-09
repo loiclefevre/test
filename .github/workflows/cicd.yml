@@ -59,7 +59,7 @@ jobs:
           gzip ${{ github.workspace }}/test-macos-aarch64.tar
       - name: Create zip archive
         if: success() && matrix.os == 'windows-latest'
-        run: Compress-Archive -Path ${{ github.workspace }}\\test.exe -Destination ${{ github.workspace }}\\test-windows_x86_64.zip
+        run: Compress-Archive -Path ${{ github.workspace }}\test.exe -Destination ${{ github.workspace }}\test-windows_x86_64.zip
 #      - name: Upload native image
 #        uses: actions/upload-artifact@v4
 #        with:
@@ -93,7 +93,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ github.workspace }}\\test-windows_x86_64.zip
+          files: ${{ github.workspace }}\test-windows_x86_64.zip
           draft: false
           prerelease: false
           make_latest: true
