@@ -47,17 +47,17 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build with Maven
         run: mvn -B -ntp verify -P native
-      - name: Create Linux archive
+      - name: Create Linux TAR Gzip archive
         if: success() && matrix.os == 'ubuntu-latest'
         run: |
           tar -cvf ${{ github.workspace }}/test-linux-x86_64.tar ${{ github.workspace }}/target/test
           gzip ${{ github.workspace }}/test-linux-x86_64.tar
-      - name: Create MAC OS archive
+      - name: Create MAC OS TAR Gzip archive
         if: success() && matrix.os == 'macos-latest'
         run: |
           tar -cvf ${{ github.workspace }}/test-macos-aarch64.tar ${{ github.workspace }}/target/test
           gzip ${{ github.workspace }}/test-macos-aarch64.tar
-      - name: Create zip archive
+      - name: Create Windows ZIP archive
         if: success() && matrix.os == 'windows-latest'
         run: Compress-Archive -Path ${{ github.workspace }}\target\test.exe -Destination ${{ github.workspace }}\test-windows_x86_64.zip
 #      - name: Upload native image

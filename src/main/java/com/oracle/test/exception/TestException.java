@@ -3,6 +3,7 @@ package com.oracle.test.exception;
 public class TestException extends RuntimeException {
 	public static final int UNKNOWN_COMMAND_LINE_ARGUMENT = 1;
 	public static final int WRONG_DATABASE_TYPE_PARAMETER = 2;
+	public static final int UNKNOWN_HOSTNAME = 3;
 
 	private final int errorCode;
 

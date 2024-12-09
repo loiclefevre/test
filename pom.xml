@@ -60,7 +60,6 @@
                                 <enabled>false</enabled>
                             </agent>
                             <buildArgs>
-                                <buildArg>-march=native</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>

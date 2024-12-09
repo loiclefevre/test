@@ -2,6 +2,9 @@ package com.oracle.test;
 
 import com.oracle.test.exception.TestException;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import static com.oracle.test.Main.VERSION;
 
 /**
@@ -114,7 +117,13 @@ public class Session {
 	}
 
 	private void createSchema() {
+		try {
+			final String hostname = InetAddress.getLocalHost().getHostName();
 
+		}
+		catch (UnknownHostException e) {
+			throw new TestException(TestException.UNKNOWN_HOSTNAME, e);
+		}
 	}
 
 	private void skipTesting() {
