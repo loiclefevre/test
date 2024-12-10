@@ -1,9 +1,14 @@
 package com.oracle.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.test.exception.TestException;
+import com.oracle.test.model.Action;
+import com.oracle.test.model.Database;
+import com.oracle.test.model.DatabaseType;
+import com.oracle.test.model.GitHubCommittedFiles;
+import com.oracle.test.model.GitHubFilename;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -36,6 +41,11 @@ public class Session {
 	private String user;
 	private String password;
 	private DatabaseType databaseType;
+
+	private String prefixList;
+	private String owner;
+	private String repository;
+	private String sha;
 
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
@@ -85,6 +95,22 @@ public class Session {
 					action = Action.SKIP_TESTING;
 					break;
 
+				case "--prefix-list":
+					prefixList = args[++i];
+					break;
+
+				case "--owner":
+					owner = args[++i];
+					break;
+
+				case "--repository":
+					repository = args[++i];
+					break;
+
+				case "--sha":
+					sha = args[++i];
+					break;
+
 				default:
 					displayUsage();
 					throw new TestException(UNKNOWN_COMMAND_LINE_ARGUMENT);
@@ -94,17 +120,20 @@ public class Session {
 
 	private void displayUsage() {
 		System.out.println("""
-				Usage: test <service> [options]
+				Usage: test <service> <options...>
 								
 				Services:
 				--create-schema    creates a schema for running the tests
 				    Options:
-				    --user              user name to be used
-				    --password          password to be used
-				    --db-type [type]    database type: atps, db19c, db21c, db23ai
+				    --user <user>          user name to be used
+				    --password <password>  password to be used
+				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
 				--skip-testing
 				    Options:
-					--prefix
+					--owner <owner>            GitHub project owner
+					--repository <repository>  GitHub project repository
+					--sha <sha>                GitHub commit sha to check
+					--prefix-list <p1,p2,...>  Comma-separated list of prefixes that will NOT trigger tests
 				""");
 	}
 
@@ -134,6 +163,16 @@ public class Session {
 	}
 
 	private void createSchema() {
+		if (user == null || user.isEmpty()) {
+			throw new TestException(CREATE_SCHEMA_MISSING_USER_NAME);
+		}
+		if (password == null || password.isEmpty()) {
+			throw new TestException(CREATE_SCHEMA_MISSING_PASSWORD);
+		}
+		if (databaseType == null) {
+			throw new TestException(CREATE_SCHEMA_MISSING_DB_TYPE);
+		}
+
 		try {
 			final String dbType = switch (databaseType) {
 				case DatabaseType.atps -> "autonomous";
@@ -178,10 +217,7 @@ public class Session {
 		catch (URISyntaxException e) {
 			throw new TestException(WRONG_MAIN_CONTROLLER_URI, e);
 		}
-		catch (IOException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
-		}
-		catch (InterruptedException e) {
+		catch (IOException | InterruptedException e) {
 			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
@@ -229,23 +265,87 @@ public class Session {
 				}
 			}
 		}
-		catch (JsonMappingException e) {
-			throw new TestException(BAD_CREATE_SCHEMA_RESPONSE, e);
-		}
 		catch (JsonProcessingException e) {
 			throw new TestException(BAD_CREATE_SCHEMA_RESPONSE, e);
 		}
-		catch (URISyntaxException e) {
-			throw new TestException(WRONG_ATPS_REST_CALL, e);
-		}
-		catch (IOException e) {
-			throw new TestException(WRONG_ATPS_REST_CALL, e);
-		}
-		catch (InterruptedException e) {
+		catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new TestException(WRONG_ATPS_REST_CALL, e);
 		}
 	}
 
 	private void skipTesting() {
+		if (owner == null || owner.isEmpty()) {
+			throw new TestException(SKIP_TESTING_MISSING_OWNER);
+		}
+		if (repository == null || repository.isEmpty()) {
+			throw new TestException(SKIP_TESTING_MISSING_REPOSITORY);
+		}
+		if (sha == null || sha.isEmpty()) {
+			throw new TestException(SKIP_TESTING_MISSING_SHA);
+		}
+		if (prefixList == null || prefixList.isEmpty()) {
+			throw new TestException(SKIP_TESTING_MISSING_PREFIX_LIST);
+		}
+
+		try {
+			final String uri = String.format("https://api.github.com/repos/%s/%s/commits/%s", owner, repository, sha);
+
+			final HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI(uri))
+					.headers("Accept", "application/vnd.github+json",
+							"Pragma", "no-cache",
+							"Cache-Control", "no-store")
+					.GET()
+					.build();
+
+			try (HttpClient client = HttpClient
+					.newBuilder()
+					.version(HttpClient.Version.HTTP_1_1)
+					.proxy(ProxySelector.getDefault())
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.build()) {
+
+				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+				if (response.statusCode() == 200) {
+					final GitHubCommittedFiles files = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(response.body(), GitHubCommittedFiles.class);
+
+					// Test now against prefixes
+					final String[] prefixes = prefixList.split(",");
+
+					final int filesNumber = files.getFiles().length;
+					int filesMatchingAnyPrefix = 0;
+
+					for (GitHubFilename filename : files.getFiles()) {
+						final String filenameToTest =  filename.getFilename();
+						//System.out.println("Testing ["+filenameToTest+"] ...");
+						for (String prefix : prefixes) {
+							if (filenameToTest.startsWith(prefix)) {
+								filesMatchingAnyPrefix++;
+								break;
+							}
+						}
+					}
+
+					if(filesNumber == filesMatchingAnyPrefix) {
+						System.out.println("Skipping tests: YES");
+						System.exit(-1);
+					} else {
+						System.out.println("Skipping tests: NO");
+						System.exit(0);
+					}
+				}
+				else {
+					throw new TestException(SKIP_TESTING_REST_ENDPOINT_ISSUE,
+							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+				}
+			}
+		}
+		catch (URISyntaxException e) {
+			throw new TestException(SKIP_TESTING_WRONG_URI, e);
+		}
+		catch (IOException | InterruptedException e) {
+			throw new TestException(SKIP_TESTING_WRONG_REST_CALL, e);
+		}
 	}
 }

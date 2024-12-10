@@ -1,4 +1,4 @@
-package com.oracle.test;
+package com.oracle.test.model;
 
 public class Database {
 	private String database;

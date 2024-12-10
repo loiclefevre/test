@@ -10,6 +10,16 @@ public class TestException extends RuntimeException {
 	public static final int WRONG_MAIN_CONTROLLER_REST_CALL = 7;
 	public static final int WRONG_ATPS_REST_CALL = 8;
 	public static final int ATPS_REST_ENDPOINT_ISSUE = 9;
+	public static final int CREATE_SCHEMA_MISSING_USER_NAME = 10;
+	public static final int CREATE_SCHEMA_MISSING_PASSWORD = 11;
+	public static final int CREATE_SCHEMA_MISSING_DB_TYPE = 12;
+	public static final int SKIP_TESTING_MISSING_OWNER = 13;
+	public static final int SKIP_TESTING_MISSING_REPOSITORY = 14;
+	public static final int SKIP_TESTING_MISSING_SHA = 15;
+	public static final int SKIP_TESTING_MISSING_PREFIX_LIST = 16;
+	public static final int SKIP_TESTING_WRONG_URI = 17;
+	public static final int SKIP_TESTING_WRONG_REST_CALL = 18;
+	public static final int SKIP_TESTING_REST_ENDPOINT_ISSUE = 19;
 
 	private final int errorCode;
 
