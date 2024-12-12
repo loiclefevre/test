@@ -74,20 +74,35 @@ public class Session {
 					break;
 
 				case "--user":
-					user = args[++i];
+					if (i + 1 < args.length) {
+						user = args[++i];
+					}
+					else {
+						throw new TestException(USER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --user parameter"));
+					}
 					break;
 
 				case "--password":
-					password = args[++i];
+					if (i + 1 < args.length) {
+						password = args[++i];
+					}
+					else {
+						throw new TestException(PASSWORD_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --password parameter"));
+					}
 					break;
 
 				case "--db-type":
-					try {
-						databaseType = DatabaseType.valueOf(args[++i]);
+					if (i + 1 < args.length) {
+						try {
+							databaseType = DatabaseType.valueOf(args[++i]);
+						}
+						catch (IllegalArgumentException iae) {
+							throw new TestException(WRONG_DATABASE_TYPE_PARAMETER,
+									new IllegalArgumentException("--db-type must be either atps, db19c, db21c, or db23ai"));
+						}
 					}
-					catch (IllegalArgumentException iae) {
-						throw new TestException(WRONG_DATABASE_TYPE_PARAMETER,
-								new IllegalArgumentException("--db-type must be either atps, db19c, db21c, or db23ai"));
+					else {
+						throw new TestException(DBTYPE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --db-type parameter"));
 					}
 					break;
 
@@ -96,19 +111,39 @@ public class Session {
 					break;
 
 				case "--prefix-list":
-					prefixList = args[++i];
+					if (i + 1 < args.length) {
+						prefixList = args[++i];
+					}
+					else {
+						throw new TestException(PREFIX_LIST_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --prefix-list parameter"));
+					}
 					break;
 
 				case "--owner":
-					owner = args[++i];
+					if (i + 1 < args.length) {
+						owner = args[++i];
+					}
+					else {
+						throw new TestException(OWNER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --owner parameter"));
+					}
 					break;
 
 				case "--repository":
-					repository = args[++i];
+					if (i + 1 < args.length) {
+						repository = args[++i];
+					}
+					else {
+						throw new TestException(REPOSITORY_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --repository parameter"));
+					}
 					break;
 
 				case "--sha":
-					sha = args[++i];
+					if (i + 1 < args.length) {
+						sha = args[++i];
+					}
+					else {
+						throw new TestException(SHA_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --sha parameter"));
+					}
 					break;
 
 				default:
@@ -317,7 +352,7 @@ public class Session {
 					int filesMatchingAnyPrefix = 0;
 
 					for (GitHubFilename filename : files.getFiles()) {
-						final String filenameToTest =  filename.getFilename();
+						final String filenameToTest = filename.getFilename();
 						//System.out.println("Testing ["+filenameToTest+"] ...");
 						for (String prefix : prefixes) {
 							if (filenameToTest.startsWith(prefix)) {
@@ -327,10 +362,11 @@ public class Session {
 						}
 					}
 
-					if(filesNumber == filesMatchingAnyPrefix) {
+					if (filesNumber == filesMatchingAnyPrefix) {
 						System.out.println("Skipping tests: YES");
 						System.exit(-1);
-					} else {
+					}
+					else {
 						System.out.println("Skipping tests: NO");
 						System.exit(0);
 					}

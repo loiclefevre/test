@@ -2,7 +2,7 @@ package com.oracle.test.model;
 
 public enum Action {
 	CREATE_SCHEMA("Creating schema..."),
-	SKIP_TESTING("Analyzing committed files to skip testing...");
+	SKIP_TESTING("Analyzing committed files to skip tests eventually...");
 
 	private final String banner;
 

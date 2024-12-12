@@ -2,10 +2,6 @@ package com.oracle.test;
 
 import com.oracle.test.exception.TestException;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.util.Locale;
 
 /**
@@ -37,7 +33,7 @@ public class Main {
 		}
 		catch (TestException te) {
 			exitStatus = te.getErrorCode();
-			if(session != null) {
+			if (session != null) {
 				switch (session.action) {
 					case CREATE_SCHEMA:
 						System.out.printf("Schema creation failed (%d)%n", exitStatus);

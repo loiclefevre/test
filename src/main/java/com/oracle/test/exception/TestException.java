@@ -20,6 +20,13 @@ public class TestException extends RuntimeException {
 	public static final int SKIP_TESTING_WRONG_URI = 17;
 	public static final int SKIP_TESTING_WRONG_REST_CALL = 18;
 	public static final int SKIP_TESTING_REST_ENDPOINT_ISSUE = 19;
+	public static final int USER_MISSING_PARAMETER = 20;
+	public static final int PASSWORD_MISSING_PARAMETER = 21;
+	public static final int DBTYPE_MISSING_PARAMETER = 22;
+	public static final int PREFIX_LIST_MISSING_PARAMETER = 23;
+	public static final int OWNER_MISSING_PARAMETER = 24;
+	public static final int REPOSITORY_MISSING_PARAMETER = 25;
+	public static final int SHA_MISSING_PARAMETER = 26;
 
 	private final int errorCode;
 
