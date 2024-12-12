@@ -2,6 +2,7 @@ package com.oracle.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.test.exception.TestException;
 import com.oracle.test.model.Action;
@@ -10,7 +11,9 @@ import com.oracle.test.model.DatabaseType;
 import com.oracle.test.model.GitHubCommittedFiles;
 import com.oracle.test.model.GitHubFilename;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ProxySelector;
 import java.net.URI;
@@ -238,7 +241,11 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					createSchemaWithORDS(response.body());
+					if(databaseType == DatabaseType.atps) {
+						createSchemaWithORDS(response.body());
+					} else {
+						createSchemaWithSQLcl(response.body());
+					}
 				}
 				else {
 					throw new TestException(CREATE_SCHEMA_REST_ENDPOINT_ISSUE,
@@ -259,6 +266,46 @@ public class Session {
 
 	private String basicAuth(final String user, final String password) {
 		return String.format("Basic %s", Base64.getEncoder().encodeToString((String.format("%s:%s", user, password)).getBytes()));
+	}
+
+	// For Base DB Systems
+	private void createSchemaWithSQLcl(final String jsonInformation) {
+		try {
+			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
+			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+
+			// Create temporary SQL script
+			final File tempSQLScript = File.createTempFile("test",".sql");
+
+			try(PrintWriter p = new PrintWriter(tempSQLScript)) {
+				p.println(String.format("""
+						create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+						alter user %s_%s quota unlimited on users;
+						grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
+						exit;""",
+						user, runID, password, user, runID, user, runID));
+			}
+
+			final ProcessBuilder pb = new ProcessBuilder("sql","-s",
+					String.format("system/%s@%s:1521/%s",
+							database.getPassword(),
+							database.getHost(),
+							database.getService()),
+					tempSQLScript.getCanonicalPath());
+			/*
+			/home/opc/sqlcl/bin/sql -s system/$PASSWORD@$HOST:1521/$SERVICE <<EOF
+    create user hibernate_orm_test_$RUNID identified by "Oracle_19_Password" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+    alter user hibernate_orm_test_$RUNID quota unlimited on users;
+    grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to hibernate_orm_test_$RUNID;
+EOF
+			 */
+		}
+		catch (JsonProcessingException e) {
+			throw new TestException(BAD_CREATE_SCHEMA_RESPONSE, e);
+		}
+		catch (IOException e) {
+			throw new TestException(WRONG_SQLCL_USAGE, e);
+		}
 	}
 
 	private void createSchemaWithORDS(final String jsonInformation) {
