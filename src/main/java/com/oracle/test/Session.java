@@ -241,8 +241,6 @@ public class Session {
 
 			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
 
-			System.out.println(uri);
-
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
 					.headers("Accept", "application/json",
