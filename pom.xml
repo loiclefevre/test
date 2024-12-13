@@ -6,7 +6,7 @@
 
     <groupId>com.oracle.test</groupId>
     <artifactId>test-services</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
 
