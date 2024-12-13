@@ -26,6 +26,7 @@ import java.util.Base64;
 
 import static com.oracle.test.Main.VERSION;
 import static com.oracle.test.exception.TestException.*;
+import static com.oracle.test.model.Action.*;
 
 /**
  * Test session.
@@ -73,7 +74,11 @@ public class Session {
 					break;
 
 				case "--create-schema":
-					action = Action.CREATE_SCHEMA;
+					action = CREATE_SCHEMA;
+					break;
+
+				case "--get-db-info":
+					action = GET_DATABASE_INFO;
 					break;
 
 				case "--user":
@@ -110,7 +115,7 @@ public class Session {
 					break;
 
 				case "--skip-testing":
-					action = Action.SKIP_TESTING;
+					action = SKIP_TESTING;
 					break;
 
 				case "--prefix-list":
@@ -161,7 +166,10 @@ public class Session {
 				Usage: test <service> <options...>
 								
 				Services:
-				--create-schema    creates a schema for running the tests
+				--get-db-info: get database information (host and service)
+				    Options:
+				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
+				--create-schema: creates a schema for running the tests
 				    Options:
 				    --user <user>          user name to be used
 				    --password <password>  password to be used
@@ -176,11 +184,17 @@ public class Session {
 	}
 
 	public void banner() {
-		if (showVersion) {
-			System.out.printf("Test v%s%n", VERSION);
-		}
-		else {
-			System.out.printf("Test%n");
+		switch(action) {
+			case GET_DATABASE_INFO:
+				return;
+			default:
+				if (showVersion) {
+					System.out.printf("Test v%s%n", VERSION);
+				}
+				else {
+					System.out.printf("Test%n");
+				}
+			break;
 		}
 	}
 
@@ -188,6 +202,10 @@ public class Session {
 		if (action == null) return;
 
 		switch (action) {
+			case GET_DATABASE_INFO:
+				getDatabaseInfo();
+				break;
+
 			case CREATE_SCHEMA:
 				System.out.printf("%s%n", action.getBanner());
 				createSchema();
@@ -197,6 +215,65 @@ public class Session {
 				System.out.printf("%s%n", action.getBanner());
 				skipTesting();
 				break;
+		}
+	}
+
+	private void getDatabaseInfo() {
+		if (databaseType == null) {
+			throw new TestException(GET_DB_INFO_MISSING_DB_TYPE);
+		}
+
+		try {
+			final String dbType = switch (databaseType) {
+				case DatabaseType.atps -> "autonomous";
+				case DatabaseType.db19c -> "db19c";
+				case DatabaseType.db21c -> "db21c";
+				case DatabaseType.db23ai -> "db23ai";
+			};
+
+			final String hostname = InetAddress.getLocalHost().getHostName();
+
+			final String uri = String.format("https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=%s&hostname=%s", dbType, hostname);
+
+			final HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI(uri))
+					.headers("Accept", "application/json",
+							"Pragma", "no-cache",
+							"Cache-Control", "no-store")
+					.GET()
+					.build();
+
+			try (HttpClient client = HttpClient
+					.newBuilder()
+					.version(HttpClient.Version.HTTP_1_1)
+					.proxy(ProxySelector.getDefault())
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.build()) {
+
+				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+				if (response.statusCode() == 200) {
+					Database database = new ObjectMapper().readValue(response.body(), Database.class);
+					database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+
+					System.out.printf("""
+							{"host": "%s", "service":"%s", "version": "%s"}%n""",
+							database.getHost(), database.getService(), database.getVersion());
+				}
+				else {
+					throw new TestException(GET_DB_INFO_REST_ENDPOINT_ISSUE,
+							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+				}
+			}
+		}
+		catch (UnknownHostException e) {
+			throw new TestException(UNKNOWN_HOSTNAME, e);
+		}
+		catch (URISyntaxException e) {
+			throw new TestException(WRONG_MAIN_CONTROLLER_URI, e);
+		}
+		catch (IOException | InterruptedException e) {
+			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
 

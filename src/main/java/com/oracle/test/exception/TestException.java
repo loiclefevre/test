@@ -30,6 +30,8 @@ public class TestException extends RuntimeException {
 	public static final int WRONG_SQLCL_USAGE = 27;
 	public static final int SQLCL_INTERRUPTED = 28;
 	public static final int SQLCL_ERROR = 29;
+	public static final int GET_DB_INFO_MISSING_DB_TYPE = 30;
+	public static final int GET_DB_INFO_REST_ENDPOINT_ISSUE = 31;
 
 	private final int errorCode;
 
