@@ -50,16 +50,16 @@ jobs:
       - name: Create Linux TAR Gzip archive
         if: success() && matrix.os == 'ubuntu-latest'
         run: |
-          cd  ${{ github.workspace }}/target/test
-          tar -cvf ../../test-linux-x86_64.tar *
-          cd ../..
+          cd  ${{ github.workspace }}/target
+          tar -cvf ../test-linux-x86_64.tar *
+          cd ..
           gzip ${{ github.workspace }}/test-linux-x86_64.tar
       - name: Create MAC OS TAR Gzip archive
         if: success() && matrix.os == 'macos-latest'
         run: |
-          cd  ${{ github.workspace }}/target/test
-          tar -cvf ../../test-macos-aarch64.tar *
-          cd ../..
+          cd  ${{ github.workspace }}/target
+          tar -cvf ../test-macos-aarch64.tar *
+          cd ..
           gzip ${{ github.workspace }}/test-macos-aarch64.tar
       - name: Create Windows ZIP archive
         if: success() && matrix.os == 'windows-latest'
