@@ -11,6 +11,7 @@ import com.oracle.test.model.DatabaseType;
 import com.oracle.test.model.GitHubCommittedFiles;
 import com.oracle.test.model.GitHubFilename;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -239,6 +240,8 @@ public class Session {
 			final String hostname = InetAddress.getLocalHost().getHostName();
 
 			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
+
+			System.out.println(uri);
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
