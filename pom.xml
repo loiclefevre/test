@@ -70,7 +70,6 @@
                                 <enabled>false</enabled>
                             </agent>
                             <buildArgs>
-                                <buildArg>-0b</buildArg>
                                 <buildArg>-H:EnableURLProtocols=http,https</buildArg>
                             </buildArgs>
                         </configuration>
