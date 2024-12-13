@@ -70,10 +70,8 @@
                                 <enabled>false</enabled>
                             </agent>
                             <buildArgs>
+                                <buildArg>-0b</buildArg>
                                 <buildArg>-H:EnableURLProtocols=http,https</buildArg>
-                                <buildArg>--initialize-at-build-time=com.oracle.test.model.Database</buildArg>
-                                <buildArg>--initialize-at-build-time=com.oracle.test.model.GitHubCommittedFiles</buildArg>
-                                <buildArg>--initialize-at-build-time=com.oracle.test.model.GitHubFilename</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
