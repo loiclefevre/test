@@ -41,6 +41,7 @@ public class Session {
 	public Action action;
 
 	private final String runID;
+	private String apiHOST;
 
 	private String user;
 	private String password;
@@ -53,6 +54,10 @@ public class Session {
 
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
+		apiHOST = System.getenv("API_HOST");
+		if(apiHOST == null) {
+			apiHOST = "api.atlas-controller.oraclecloud.com";
+		}
 		analyzeCommandLineParameters(args);
 	}
 
@@ -233,7 +238,7 @@ public class Session {
 
 			final String hostname = InetAddress.getLocalHost().getHostName();
 
-			final String uri = String.format("https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=%s&hostname=%s", dbType, hostname);
+			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -298,7 +303,7 @@ public class Session {
 
 			final String hostname = InetAddress.getLocalHost().getHostName();
 
-			final String uri = String.format("https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=%s&hostname=%s", dbType, hostname);
+			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
