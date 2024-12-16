@@ -38,6 +38,10 @@ public class Main {
 						System.out.printf("Schema creation failed (%d)%n", exitStatus);
 						break;
 
+					case DROP_SCHEMA:
+						System.out.printf("Schema deletion failed (%d)%n", exitStatus);
+						break;
+
 					case SKIP_TESTING:
 						System.out.printf("Skip testing check failed (%d)%n", exitStatus);
 						break;

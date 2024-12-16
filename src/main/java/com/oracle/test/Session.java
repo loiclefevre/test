@@ -81,6 +81,10 @@ public class Session {
 					action = CREATE_SCHEMA;
 					break;
 
+				case "--drop-schema":
+					action = DROP_SCHEMA;
+					break;
+
 				case "--get-db-info":
 					action = GET_DATABASE_INFO;
 					break;
@@ -178,6 +182,10 @@ public class Session {
 				    --user <user>          user name to be used
 				    --password <password>  password to be used
 				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
+				--drop-schema: drops the schema used for running the tests
+				    Options:
+				    --user <user>          user name to be used
+				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
 				--skip-testing
 				    Options:
 					--owner <owner>            GitHub project owner
@@ -213,6 +221,11 @@ public class Session {
 			case CREATE_SCHEMA:
 				System.out.printf("%s%n", action.getBanner());
 				createSchema();
+				break;
+
+			case DROP_SCHEMA:
+				System.out.printf("%s%n", action.getBanner());
+				dropSchema();
 				break;
 
 			case SKIP_TESTING:
@@ -353,6 +366,68 @@ public class Session {
 		}
 	}
 
+	private void dropSchema() {
+		if (user == null || user.isEmpty()) {
+			throw new TestException(DROP_SCHEMA_MISSING_USER_NAME);
+		}
+		if (databaseType == null) {
+			throw new TestException(DROP_SCHEMA_MISSING_DB_TYPE);
+		}
+
+		try {
+			final String dbType = switch (databaseType) {
+				case DatabaseType.atps -> "autonomous";
+				case DatabaseType.db19c -> "db19c";
+				case DatabaseType.db21c -> "db21c";
+				case DatabaseType.db23ai -> "db23ai";
+			};
+
+			final String hostname = InetAddress.getLocalHost().getHostName();
+
+			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
+
+			final HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI(uri))
+					.headers("Accept", "application/json",
+							"Pragma", "no-cache",
+							"Cache-Control", "no-store")
+					.GET()
+					.build();
+
+			try (HttpClient client = HttpClient
+					.newBuilder()
+					.version(HttpClient.Version.HTTP_1_1)
+					.proxy(ProxySelector.getDefault())
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.build()) {
+
+				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+				if (response.statusCode() == 200) {
+					if (databaseType == DatabaseType.atps) {
+						dropSchemaWithORDS(response.body());
+					}
+					else {
+						dropSchemaWithSQLcl(response.body());
+					}
+				}
+				else {
+					throw new TestException(DROP_SCHEMA_REST_ENDPOINT_ISSUE,
+							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+				}
+			}
+		}
+		catch (UnknownHostException e) {
+			throw new TestException(UNKNOWN_HOSTNAME, e);
+		}
+		catch (URISyntaxException e) {
+			throw new TestException(WRONG_MAIN_CONTROLLER_URI, e);
+		}
+		catch (IOException | InterruptedException e) {
+			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+		}
+	}
+
 	private String basicAuth(final String user, final String password) {
 		return String.format("Basic %s", Base64.getEncoder().encodeToString((String.format("%s:%s", user, password)).getBytes()));
 	}
@@ -412,6 +487,49 @@ public class Session {
 		}
 	}
 
+	// For Base DB Systems
+	private void dropSchemaWithSQLcl(final String jsonInformation) {
+		try {
+			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
+			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+
+			// Create temporary SQL script
+			final File tempSQLScript = File.createTempFile("test", ".sql");
+
+			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
+				p.println(String.format("""
+								drop user %s_%s cascade;
+								exit;""",
+						user, runID));
+			}
+
+			final ProcessBuilder pb = new ProcessBuilder("sql", "-s",
+					String.format("system/%s@%s:1521/%s",
+							database.getPassword(),
+							database.getHost(),
+							database.getService()),
+					tempSQLScript.getCanonicalPath())
+					.inheritIO();
+
+			final Process p = pb.start();
+
+			final int returnCode = p.waitFor();
+
+			if (returnCode != 0) {
+				throw new TestException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
+			}
+		}
+		catch (JsonProcessingException e) {
+			throw new TestException(BAD_DROP_SCHEMA_RESPONSE, e);
+		}
+		catch (IOException e) {
+			throw new TestException(WRONG_SQLCL_USAGE, e);
+		}
+		catch (InterruptedException e) {
+			throw new TestException(SQLCL_INTERRUPTED);
+		}
+	}
+
 	private void createSchemaWithORDS(final String jsonInformation) {
 		try {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
@@ -454,6 +572,50 @@ public class Session {
 		}
 		catch (JsonProcessingException e) {
 			throw new TestException(BAD_CREATE_SCHEMA_RESPONSE, e);
+		}
+		catch (URISyntaxException | IOException | InterruptedException e) {
+			throw new TestException(WRONG_ATPS_REST_CALL, e);
+		}
+	}
+
+	private void dropSchemaWithORDS(final String jsonInformation) {
+		try {
+			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
+			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+
+			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
+
+			final HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI(uri))
+					.headers("Accept", "application/json",
+							"Content-Type", "application/sql",
+							"Authorization", basicAuth("admin", database.getPassword()),
+							"Pragma", "no-cache",
+							"Cache-Control", "no-store")
+					// WE EXPECT ATP-S 23ai
+					.POST(HttpRequest.BodyPublishers.ofString(String.format("drop user %s_%s cascade;", user, runID)))
+					.build();
+
+			try (HttpClient client = HttpClient
+					.newBuilder()
+					.version(HttpClient.Version.HTTP_1_1)
+					.proxy(ProxySelector.getDefault())
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.build()) {
+
+				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+				if (response.statusCode() == 200) {
+					System.out.println("Done.");
+				}
+				else {
+					throw new TestException(ATPS_REST_ENDPOINT_ISSUE,
+							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+				}
+			}
+		}
+		catch (JsonProcessingException e) {
+			throw new TestException(BAD_DROP_SCHEMA_RESPONSE, e);
 		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new TestException(WRONG_ATPS_REST_CALL, e);

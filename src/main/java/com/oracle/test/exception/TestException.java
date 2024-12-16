@@ -32,6 +32,10 @@ public class TestException extends RuntimeException {
 	public static final int SQLCL_ERROR = 29;
 	public static final int GET_DB_INFO_MISSING_DB_TYPE = 30;
 	public static final int GET_DB_INFO_REST_ENDPOINT_ISSUE = 31;
+	public static final int DROP_SCHEMA_MISSING_USER_NAME = 32;
+	public static final int DROP_SCHEMA_MISSING_DB_TYPE = 33;
+	public static final int DROP_SCHEMA_REST_ENDPOINT_ISSUE = 34;
+	public static final int BAD_DROP_SCHEMA_RESPONSE = 35;
 
 	private final int errorCode;
 
