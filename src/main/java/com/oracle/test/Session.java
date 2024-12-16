@@ -2,7 +2,6 @@ package com.oracle.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.test.exception.TestException;
 import com.oracle.test.model.Action;
@@ -11,7 +10,6 @@ import com.oracle.test.model.DatabaseType;
 import com.oracle.test.model.GitHubCommittedFiles;
 import com.oracle.test.model.GitHubFilename;
 
-import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -56,7 +54,7 @@ public class Session {
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
-		if(apiHOST == null) {
+		if (apiHOST == null) {
 			apiHOST = "api.atlas-controller.oraclecloud.com";
 		}
 		analyzeCommandLineParameters(args);
@@ -190,7 +188,7 @@ public class Session {
 	}
 
 	public void banner() {
-		switch(action) {
+		switch (action) {
 			case GET_DATABASE_INFO:
 				return;
 			default:
@@ -200,7 +198,7 @@ public class Session {
 				else {
 					System.out.printf("Test%n");
 				}
-			break;
+				break;
 		}
 	}
 
@@ -262,9 +260,16 @@ public class Session {
 					Database database = new ObjectMapper().readValue(response.body(), Database.class);
 					database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
+					final String connectionString = databaseType == DatabaseType.atps ?
+							String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
+							:
+							String.format("%s:1521/%s", database.getHost(), database.getService());
+
+
 					System.out.printf("""
-							{"host": "%s", "service":"%s", "version": "%s"}%n""",
-							database.getHost(), database.getService(), database.getVersion());
+									{"host": "%s", "service":"%s", "version": "%s", "connection-string": "%s"}%n""",
+							database.getHost(), database.getService(), database.getVersion(),
+							connectionString);
 				}
 				else {
 					throw new TestException(GET_DB_INFO_REST_ENDPOINT_ISSUE,
@@ -324,9 +329,10 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					if(databaseType == DatabaseType.atps) {
+					if (databaseType == DatabaseType.atps) {
 						createSchemaWithORDS(response.body());
-					} else {
+					}
+					else {
 						createSchemaWithSQLcl(response.body());
 					}
 				}
@@ -358,27 +364,28 @@ public class Session {
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
 			// Create temporary SQL script
-			final File tempSQLScript = File.createTempFile("test",".sql");
+			final File tempSQLScript = File.createTempFile("test", ".sql");
 
-			try(PrintWriter p = new PrintWriter(tempSQLScript)) {
-				if(databaseType==DatabaseType.db23ai) {
+			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
+				if (databaseType == DatabaseType.db23ai) {
 					p.println(String.format("""
-									create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
-						alter user %s_%s quota unlimited on users;
-						grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-						exit;""",
-						user, runID, password, user, runID, user, runID));
-				} else {
+												create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+									alter user %s_%s quota unlimited on users;
+									grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
+									exit;""",
+							user, runID, password, user, runID, user, runID));
+				}
+				else {
 					p.println(String.format("""
-									create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
-						alter user %s_%s quota unlimited on users;
-						grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
-						exit;""",
+												create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+									alter user %s_%s quota unlimited on users;
+									grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
+									exit;""",
 							user, runID, password, user, runID, user, runID));
 				}
 			}
 
-			final ProcessBuilder pb = new ProcessBuilder("sql","-s",
+			final ProcessBuilder pb = new ProcessBuilder("sql", "-s",
 					String.format("system/%s@%s:1521/%s",
 							database.getPassword(),
 							database.getHost(),
@@ -391,7 +398,7 @@ public class Session {
 			final int returnCode = p.waitFor();
 
 			if (returnCode != 0) {
-				throw new TestException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code "+returnCode));
+				throw new TestException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
 			}
 		}
 		catch (JsonProcessingException e) {
