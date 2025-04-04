@@ -61,7 +61,7 @@ public class Session {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
 		if (apiHOST == null) {
-			apiHOST = "api.atlas-controller.oraclecloud.com";
+			apiHOST = "api.testpilot-controller.oraclecloud.com";
 		}
 		analyzeCommandLineParameters(args);
 	}
@@ -254,9 +254,7 @@ public class Session {
 				case DatabaseType.db23ai -> "db23ai";
 			};
 
-			final String hostname = InetAddress.getLocalHost().getHostName();
-
-			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
+			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType );
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -296,9 +294,6 @@ public class Session {
 				}
 			}
 		}
-		catch (UnknownHostException e) {
-			throw new TestPilotException(UNKNOWN_HOSTNAME, e);
-		}
 		catch (URISyntaxException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
 		}
@@ -326,9 +321,7 @@ public class Session {
 				case DatabaseType.db23ai -> "db23ai";
 			};
 
-			final String hostname = InetAddress.getLocalHost().getHostName();
-
-			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
+			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -361,9 +354,6 @@ public class Session {
 				}
 			}
 		}
-		catch (UnknownHostException e) {
-			throw new TestPilotException(UNKNOWN_HOSTNAME, e);
-		}
 		catch (URISyntaxException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
 		}
@@ -388,9 +378,7 @@ public class Session {
 				case DatabaseType.db23ai -> "db23ai";
 			};
 
-			final String hostname = InetAddress.getLocalHost().getHostName();
-
-			final String uri = String.format("https://%s/ords/atlas/admin/database?type=%s&hostname=%s", apiHOST, dbType, hostname.replaceAll(" ", "%20"));
+			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType );
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -422,9 +410,6 @@ public class Session {
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
-		}
-		catch (UnknownHostException e) {
-			throw new TestPilotException(UNKNOWN_HOSTNAME, e);
 		}
 		catch (URISyntaxException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
