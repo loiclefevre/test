@@ -16,6 +16,9 @@ import com.oracle.testpilot.model.DatabaseType;
 import com.oracle.testpilot.model.GitHubCommittedFiles;
 import com.oracle.testpilot.model.GitHubFilename;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,6 +30,8 @@ import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 import static com.oracle.testpilot.Main.VERSION;
@@ -264,8 +269,11 @@ public class Session {
 					.GET()
 					.build();
 
+			final SSLContext sslContext = createCustomSSLContext();
+
 			try (HttpClient client = HttpClient
 					.newBuilder()
+					.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -302,6 +310,24 @@ public class Session {
 		}
 	}
 
+	private static SSLContext createCustomSSLContext() {
+		final TrustManager[] trustAllCerts = new TrustManager[]{
+				new X509TrustManager() {
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() { return new java.security.cert.X509Certificate[0]; }
+					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+				}
+		};
+
+		try {
+			final SSLContext sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+			return sslContext;
+		}
+		catch (NoSuchAlgorithmException | KeyManagementException e) {
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+		}
+	}
 	private void createSchema() {
 		if (user == null || user.isEmpty()) {
 			throw new TestPilotException(CREATE_SCHEMA_MISSING_USER_NAME);
@@ -331,8 +357,11 @@ public class Session {
 					.GET()
 					.build();
 
+			final SSLContext sslContext = createCustomSSLContext();
+
 			try (HttpClient client = HttpClient
 					.newBuilder()
+					.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -388,8 +417,11 @@ public class Session {
 					.GET()
 					.build();
 
+			final SSLContext sslContext = createCustomSSLContext();
+
 			try (HttpClient client = HttpClient
 					.newBuilder()
+					.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
