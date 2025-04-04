@@ -8,15 +8,24 @@ branding:
 
 inputs:
   version:
-    description: 'The Test version to use.'
+    description: 'The version to use.'
     default: 'latest'
+    required: true
+  type:
+    description: 'The technology to test.'
+    default: 'autonomous'
     required: true
 
 runs:
   using: 'composite'
   steps:
-    - name: 'Download Test'
+    - name: 'Install binaries'
       shell: bash
       env:
         VERSION: ${{ inputs.version }}
       run: "${GITHUB_ACTION_PATH}/setup-test.sh"
+    - name: 'Run'
+      shell: bash
+      env:
+        RUNID: ${{ github.run_number }}
+      run: "${GITHUB_ACTION_PATH}/setup-testpilot"
