@@ -77,7 +77,7 @@ jobs:
           draft: false
           prerelease: false
           make_latest: true
-          name: Test v${{ github.ref_name }}
+          name: Test ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
 #          body_path: CHANGELOG.md
           generate_release_notes: true
@@ -89,7 +89,7 @@ jobs:
           draft: false
           prerelease: false
           make_latest: true
-          name: Test v${{ github.ref_name }}
+          name: Test ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           #          body_path: CHANGELOG.md
           generate_release_notes: true
@@ -101,7 +101,7 @@ jobs:
           draft: false
           prerelease: false
           make_latest: true
-          name: Test v${{ github.ref_name }}
+          name: Test ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           #          body_path: CHANGELOG.md
           generate_release_notes: true
