@@ -1,8 +1,5 @@
 #!/bin/bash
-
 set -e
-
-echo "::group::📦 Download Test"
-
-
+echo "::group::📦 Unpacking test"
+tar -xf test-linux-x86_64.tar.gz
 echo "::endgroup::"
