@@ -7,5 +7,5 @@ wget https://github.com/loiclefevre/test/releases/download/${VERSION}/test-linux
 echo "::endgroup::"
 
 echo "::group::📦 Unpacking test"
-tar -xf test-linux-x86_64.tar.gz
+tar -xf ${GITHUB_ACTION_PATH}/test-linux-x86_64.tar.gz
 echo "::endgroup::"
