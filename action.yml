@@ -9,11 +9,15 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'latest'
+    default: 'v0.0.13'
     required: true
   type:
     description: 'The technology to test.'
-    default: 'autonomous'
+    default: 'atps'
+    required: true
+  service:
+    description: 'The service to use.'
+    default: 'create-schema'
     required: true
 
 runs:
@@ -28,4 +32,5 @@ runs:
       shell: bash
       env:
         RUNID: ${{ github.run_number }}
-      run: "${GITHUB_ACTION_PATH}/setup-testpilot"
+        SERVICE: ${{ github.service }}
+      run: "${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE}"
