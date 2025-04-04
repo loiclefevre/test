@@ -1,6 +1,12 @@
-package com.oracle.test.exception;
+/*
+ ** Oracle Test Pilot
+ **
+ ** Copyright (c) 2025 Oracle
+ ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
+ */
+package com.oracle.testpilot.exception;
 
-public class TestException extends RuntimeException {
+public class TestPilotException extends RuntimeException {
 	public static final int UNKNOWN_COMMAND_LINE_ARGUMENT = 1;
 	public static final int WRONG_DATABASE_TYPE_PARAMETER = 2;
 	public static final int UNKNOWN_HOSTNAME = 3;
@@ -39,12 +45,12 @@ public class TestException extends RuntimeException {
 
 	private final int errorCode;
 
-	public TestException(final int errorCode, final Throwable cause) {
+	public TestPilotException(final int errorCode, final Throwable cause) {
 		super(String.valueOf(errorCode), cause);
 		this.errorCode = errorCode;
 	}
 
-	public TestException(final int errorCode) {
+	public TestPilotException(final int errorCode) {
 		this(errorCode, null);
 	}
 

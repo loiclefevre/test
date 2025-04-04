@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.oracle.test</groupId>
-    <artifactId>test-services</artifactId>
+    <groupId>com.oracle.testpilot</groupId>
+    <artifactId>testpilot-services</artifactId>
     <version>0.0.2</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
@@ -19,8 +19,8 @@
         <maven.compiler.release>23</maven.compiler.release>
         <maven.plugin.validation>VERBOSE</maven.plugin.validation>
         <native.maven.plugin.version>0.10.3</native.maven.plugin.version>
-        <imageName>test</imageName>
-        <mainClass>com.oracle.test.Main</mainClass>
+        <imageName>setup-testpilot</imageName>
+        <mainClass>com.oracle.testpilot.Main</mainClass>
     </properties>
 
     <dependencies>
@@ -54,7 +54,7 @@
                                 <phase>package</phase>
                             </execution>
                             <execution>
-                                <id>test-native</id>
+                                <id>testpilot-native</id>
                                 <goals>
                                     <goal>test</goal>
                                 </goals>

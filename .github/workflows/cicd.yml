@@ -51,19 +51,19 @@ jobs:
         if: success() && matrix.os == 'ubuntu-latest'
         run: |
           cd  ${{ github.workspace }}/target
-          tar -cvf ../test-linux-x86_64.tar test
+          tar -cvf ../test-linux-x86_64.tar setup-testpilot
           cd ..
           gzip ${{ github.workspace }}/test-linux-x86_64.tar
       - name: Create MAC OS TAR Gzip archive
         if: success() && matrix.os == 'macos-latest'
         run: |
           cd  ${{ github.workspace }}/target
-          tar -cvf ../test-macos-aarch64.tar test
+          tar -cvf ../test-macos-aarch64.tar setup-testpilot
           cd ..
           gzip ${{ github.workspace }}/test-macos-aarch64.tar
       - name: Create Windows ZIP archive
         if: success() && matrix.os == 'windows-latest'
-        run: Compress-Archive -Path ${{ github.workspace }}\target\test.exe -Destination ${{ github.workspace }}\test-windows_x86_64.zip
+        run: Compress-Archive -Path ${{ github.workspace }}\target\setup-testpilot.exe -Destination ${{ github.workspace }}\test-windows_x86_64.zip
 #      - name: Upload native image
 #        uses: actions/upload-artifact@v4
 #        with:

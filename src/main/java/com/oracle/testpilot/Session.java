@@ -1,14 +1,20 @@
-package com.oracle.test;
+/*
+ ** Oracle Test Pilot
+ **
+ ** Copyright (c) 2025 Oracle
+ ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
+ */
+package com.oracle.testpilot;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oracle.test.exception.TestException;
-import com.oracle.test.model.Action;
-import com.oracle.test.model.Database;
-import com.oracle.test.model.DatabaseType;
-import com.oracle.test.model.GitHubCommittedFiles;
-import com.oracle.test.model.GitHubFilename;
+import com.oracle.testpilot.exception.TestPilotException;
+import com.oracle.testpilot.model.Action;
+import com.oracle.testpilot.model.Database;
+import com.oracle.testpilot.model.DatabaseType;
+import com.oracle.testpilot.model.GitHubCommittedFiles;
+import com.oracle.testpilot.model.GitHubFilename;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,12 +29,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Base64;
 
-import static com.oracle.test.Main.VERSION;
-import static com.oracle.test.exception.TestException.*;
-import static com.oracle.test.model.Action.*;
+import static com.oracle.testpilot.Main.VERSION;
+import static com.oracle.testpilot.exception.TestPilotException.*;
+import static com.oracle.testpilot.model.Action.*;
 
 /**
- * Test session.
+ * Oracle Test Pilot session.
  *
  * @author LLEFEVRE
  * @since 0.0.1
@@ -94,7 +100,7 @@ public class Session {
 						user = args[++i];
 					}
 					else {
-						throw new TestException(USER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --user parameter"));
+						throw new TestPilotException(USER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --user parameter"));
 					}
 					break;
 
@@ -103,7 +109,7 @@ public class Session {
 						password = args[++i];
 					}
 					else {
-						throw new TestException(PASSWORD_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --password parameter"));
+						throw new TestPilotException(PASSWORD_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --password parameter"));
 					}
 					break;
 
@@ -113,12 +119,12 @@ public class Session {
 							databaseType = DatabaseType.valueOf(args[++i]);
 						}
 						catch (IllegalArgumentException iae) {
-							throw new TestException(WRONG_DATABASE_TYPE_PARAMETER,
+							throw new TestPilotException(WRONG_DATABASE_TYPE_PARAMETER,
 									new IllegalArgumentException("--db-type must be either atps, db19c, db21c, or db23ai"));
 						}
 					}
 					else {
-						throw new TestException(DBTYPE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --db-type parameter"));
+						throw new TestPilotException(DBTYPE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --db-type parameter"));
 					}
 					break;
 
@@ -131,7 +137,7 @@ public class Session {
 						prefixList = args[++i];
 					}
 					else {
-						throw new TestException(PREFIX_LIST_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --prefix-list parameter"));
+						throw new TestPilotException(PREFIX_LIST_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --prefix-list parameter"));
 					}
 					break;
 
@@ -140,7 +146,7 @@ public class Session {
 						owner = args[++i];
 					}
 					else {
-						throw new TestException(OWNER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --owner parameter"));
+						throw new TestPilotException(OWNER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --owner parameter"));
 					}
 					break;
 
@@ -149,7 +155,7 @@ public class Session {
 						repository = args[++i];
 					}
 					else {
-						throw new TestException(REPOSITORY_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --repository parameter"));
+						throw new TestPilotException(REPOSITORY_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --repository parameter"));
 					}
 					break;
 
@@ -158,13 +164,13 @@ public class Session {
 						sha = args[++i];
 					}
 					else {
-						throw new TestException(SHA_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --sha parameter"));
+						throw new TestPilotException(SHA_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --sha parameter"));
 					}
 					break;
 
 				default:
 					displayUsage();
-					throw new TestException(UNKNOWN_COMMAND_LINE_ARGUMENT);
+					throw new TestPilotException(UNKNOWN_COMMAND_LINE_ARGUMENT);
 			}
 		}
 	}
@@ -237,7 +243,7 @@ public class Session {
 
 	private void getDatabaseInfo() {
 		if (databaseType == null) {
-			throw new TestException(GET_DB_INFO_MISSING_DB_TYPE);
+			throw new TestPilotException(GET_DB_INFO_MISSING_DB_TYPE);
 		}
 
 		try {
@@ -285,31 +291,31 @@ public class Session {
 							connectionString);
 				}
 				else {
-					throw new TestException(GET_DB_INFO_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(GET_DB_INFO_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
 		}
 		catch (UnknownHostException e) {
-			throw new TestException(UNKNOWN_HOSTNAME, e);
+			throw new TestPilotException(UNKNOWN_HOSTNAME, e);
 		}
 		catch (URISyntaxException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_URI, e);
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
 		}
 		catch (IOException | InterruptedException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
 
 	private void createSchema() {
 		if (user == null || user.isEmpty()) {
-			throw new TestException(CREATE_SCHEMA_MISSING_USER_NAME);
+			throw new TestPilotException(CREATE_SCHEMA_MISSING_USER_NAME);
 		}
 		if (password == null || password.isEmpty()) {
-			throw new TestException(CREATE_SCHEMA_MISSING_PASSWORD);
+			throw new TestPilotException(CREATE_SCHEMA_MISSING_PASSWORD);
 		}
 		if (databaseType == null) {
-			throw new TestException(CREATE_SCHEMA_MISSING_DB_TYPE);
+			throw new TestPilotException(CREATE_SCHEMA_MISSING_DB_TYPE);
 		}
 
 		try {
@@ -350,28 +356,28 @@ public class Session {
 					}
 				}
 				else {
-					throw new TestException(CREATE_SCHEMA_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(CREATE_SCHEMA_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
 		}
 		catch (UnknownHostException e) {
-			throw new TestException(UNKNOWN_HOSTNAME, e);
+			throw new TestPilotException(UNKNOWN_HOSTNAME, e);
 		}
 		catch (URISyntaxException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_URI, e);
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
 		}
 		catch (IOException | InterruptedException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
 
 	private void dropSchema() {
 		if (user == null || user.isEmpty()) {
-			throw new TestException(DROP_SCHEMA_MISSING_USER_NAME);
+			throw new TestPilotException(DROP_SCHEMA_MISSING_USER_NAME);
 		}
 		if (databaseType == null) {
-			throw new TestException(DROP_SCHEMA_MISSING_DB_TYPE);
+			throw new TestPilotException(DROP_SCHEMA_MISSING_DB_TYPE);
 		}
 
 		try {
@@ -412,19 +418,19 @@ public class Session {
 					}
 				}
 				else {
-					throw new TestException(DROP_SCHEMA_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(DROP_SCHEMA_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
 		}
 		catch (UnknownHostException e) {
-			throw new TestException(UNKNOWN_HOSTNAME, e);
+			throw new TestPilotException(UNKNOWN_HOSTNAME, e);
 		}
 		catch (URISyntaxException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_URI, e);
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
 		}
 		catch (IOException | InterruptedException e) {
-			throw new TestException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
 
@@ -473,17 +479,17 @@ public class Session {
 			final int returnCode = p.waitFor();
 
 			if (returnCode != 0) {
-				throw new TestException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
+				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestException(BAD_CREATE_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_CREATE_SCHEMA_RESPONSE, e);
 		}
 		catch (IOException e) {
-			throw new TestException(WRONG_SQLCL_USAGE, e);
+			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
 		}
 		catch (InterruptedException e) {
-			throw new TestException(SQLCL_INTERRUPTED);
+			throw new TestPilotException(SQLCL_INTERRUPTED);
 		}
 	}
 
@@ -516,17 +522,17 @@ public class Session {
 			final int returnCode = p.waitFor();
 
 			if (returnCode != 0) {
-				throw new TestException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
+				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestException(BAD_DROP_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_DROP_SCHEMA_RESPONSE, e);
 		}
 		catch (IOException e) {
-			throw new TestException(WRONG_SQLCL_USAGE, e);
+			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
 		}
 		catch (InterruptedException e) {
-			throw new TestException(SQLCL_INTERRUPTED);
+			throw new TestPilotException(SQLCL_INTERRUPTED);
 		}
 	}
 
@@ -565,16 +571,16 @@ public class Session {
 					System.out.println("Done.");
 				}
 				else {
-					throw new TestException(ATPS_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestException(BAD_CREATE_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_CREATE_SCHEMA_RESPONSE, e);
 		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
-			throw new TestException(WRONG_ATPS_REST_CALL, e);
+			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
 		}
 	}
 
@@ -609,31 +615,31 @@ public class Session {
 					System.out.println("Done.");
 				}
 				else {
-					throw new TestException(ATPS_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestException(BAD_DROP_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_DROP_SCHEMA_RESPONSE, e);
 		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
-			throw new TestException(WRONG_ATPS_REST_CALL, e);
+			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
 		}
 	}
 
 	private void skipTesting() {
 		if (owner == null || owner.isEmpty()) {
-			throw new TestException(SKIP_TESTING_MISSING_OWNER);
+			throw new TestPilotException(SKIP_TESTING_MISSING_OWNER);
 		}
 		if (repository == null || repository.isEmpty()) {
-			throw new TestException(SKIP_TESTING_MISSING_REPOSITORY);
+			throw new TestPilotException(SKIP_TESTING_MISSING_REPOSITORY);
 		}
 		if (sha == null || sha.isEmpty()) {
-			throw new TestException(SKIP_TESTING_MISSING_SHA);
+			throw new TestPilotException(SKIP_TESTING_MISSING_SHA);
 		}
 		if (prefixList == null || prefixList.isEmpty()) {
-			throw new TestException(SKIP_TESTING_MISSING_PREFIX_LIST);
+			throw new TestPilotException(SKIP_TESTING_MISSING_PREFIX_LIST);
 		}
 
 		try {
@@ -686,16 +692,16 @@ public class Session {
 					}
 				}
 				else {
-					throw new TestException(SKIP_TESTING_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(SKIP_TESTING_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
 		}
 		catch (URISyntaxException e) {
-			throw new TestException(SKIP_TESTING_WRONG_URI, e);
+			throw new TestPilotException(SKIP_TESTING_WRONG_URI, e);
 		}
 		catch (IOException | InterruptedException e) {
-			throw new TestException(SKIP_TESTING_WRONG_REST_CALL, e);
+			throw new TestPilotException(SKIP_TESTING_WRONG_REST_CALL, e);
 		}
 	}
 }

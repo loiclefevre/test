@@ -1,11 +1,17 @@
-package com.oracle.test;
+/*
+ ** Oracle Test Pilot
+ **
+ ** Copyright (c) 2025 Oracle
+ ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
+ */
+package com.oracle.testpilot;
 
-import com.oracle.test.exception.TestException;
+import com.oracle.testpilot.exception.TestPilotException;
 
 import java.util.Locale;
 
 /**
- * Test services main entry point.
+ * Oracle Test Pilot services main entry point.
  *
  * @author LLEFEVRE
  * @since 0.0.1
@@ -30,14 +36,18 @@ public class Main {
 			session.banner();
 			session.run();
 		}
-		catch (TestException te) {
+		catch (TestPilotException te) {
 			exitStatus = te.getErrorCode();
 			if (session != null) {
 				switch (session.action) {
+					// TODO: change to DATABASE
+					// TODO: be able to create several users!
 					case CREATE_SCHEMA:
 						System.out.printf("Schema creation failed (%d)%n", exitStatus);
 						break;
 
+					// TODO: change to DATABASE
+					// TODO: be able to create several users!
 					case DROP_SCHEMA:
 						System.out.printf("Schema deletion failed (%d)%n", exitStatus);
 						break;

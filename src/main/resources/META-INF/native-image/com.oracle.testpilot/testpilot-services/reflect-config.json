@@ -1,6 +1,6 @@
 [
   {
-    "name" : "com.oracle.test.model.Database",
+    "name" : "com.oracle.testpilot.model.Database",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -9,7 +9,7 @@
     "allPublicFields" : true
   },
   {
-    "name" : "com.oracle.test.model.GitHubCommittedFiles",
+    "name" : "com.oracle.testpilot.model.GitHubCommittedFiles",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
@@ -18,7 +18,7 @@
     "allPublicFields" : true
   },
   {
-    "name" : "com.oracle.test.model.GitHubFilename",
+    "name" : "com.oracle.testpilot.model.GitHubFilename",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
     "allDeclaredMethods" : true,
