@@ -213,10 +213,7 @@ public class Session {
 				return;
 			default:
 				if (showVersion) {
-					System.out.printf("Test v%s%n", VERSION);
-				}
-				else {
-					System.out.printf("Test%n");
+					System.out.printf("test_version=%s%n", VERSION);
 				}
 				break;
 		}
