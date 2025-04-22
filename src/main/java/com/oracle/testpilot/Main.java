@@ -24,7 +24,7 @@ public class Main {
 		System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
-	public static final String VERSION = "0.0.25";
+	public static final String VERSION = "0.0.26";
 
 	public static void main(final String[] args) {
 		final long startTime = System.currentTimeMillis();
