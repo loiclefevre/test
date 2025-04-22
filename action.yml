@@ -9,12 +9,18 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.20'
+    default: 'v0.0.21'
     required: true
   type:
     description: 'The technology to test.'
     default: 'atps'
     required: true
+  user:
+    description: 'The database user name.'
+    required: false
+  password:
+    description: 'The database user password.'
+    required: false
   service:
     description: 'The service to use.'
     default: 'create-schema'
@@ -32,5 +38,8 @@ runs:
       shell: bash
       env:
         RUNID: ${{ github.run_number }}
-        SERVICE: ${{ github.service }}
-      run: "${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE}"
+        SERVICE: ${{ inputs.service }}
+        USER: ${{ inputs.user }}
+        PASSWORD: ${{ inputs.password }}
+        DB_TYPE: ${{ inputs.type }}
+      run: "${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE} --user ${USER} --password ${PASSWORD} --db-type ${DB_TYPE}"
