@@ -231,17 +231,17 @@ public class Session {
 				break;
 
 			case CREATE_SCHEMA:
-				System.out.printf("%s%n", action.getBanner());
+				//System.out.printf("%s%n", action.getBanner());
 				createSchema();
 				break;
 
 			case DROP_SCHEMA:
-				System.out.printf("%s%n", action.getBanner());
+				//System.out.printf("%s%n", action.getBanner());
 				dropSchema();
 				break;
 
 			case SKIP_TESTING:
-				System.out.printf("%s%n", action.getBanner());
+				//System.out.printf("%s%n", action.getBanner());
 				skipTesting();
 				break;
 		}
@@ -291,9 +291,16 @@ public class Session {
 							:
 							String.format("%s:1521/%s", database.getHost(), database.getService());
 
-
+					// JSON
 					System.out.printf("""
 									{"host": "%s", "service":"%s", "version": "%s", "connection-string": "%s"}%n""",
+							database.getHost(), database.getService(), database.getVersion(),
+							connectionString);
+					System.out.printf("""
+									host=%s
+									service=%s
+									version=%s
+									connection_string="%s\"""",
 							database.getHost(), database.getService(), database.getVersion(),
 							connectionString);
 				}
@@ -498,6 +505,8 @@ public class Session {
 
 			if (returnCode != 0) {
 				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
+			} else {
+				System.out.println("create_schema=ok");
 			}
 		}
 		catch (JsonProcessingException e) {
@@ -541,6 +550,8 @@ public class Session {
 
 			if (returnCode != 0) {
 				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
+			} else {
+				System.out.println("drop_schema=ok");
 			}
 		}
 		catch (JsonProcessingException e) {
@@ -586,7 +597,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					System.out.println("Done.");
+					System.out.println("create_schema=ok");
 				}
 				else {
 					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
@@ -630,7 +641,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					System.out.println("Done.");
+					System.out.println("drop_schema=ok");
 				}
 				else {
 					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
@@ -701,11 +712,11 @@ public class Session {
 					}
 
 					if (filesNumber == filesMatchingAnyPrefix) {
-						System.out.println("Skipping tests: YES");
-						System.exit(-1);
+						System.out.println("skipping_tests=yes");
+						System.exit(0);
 					}
 					else {
-						System.out.println("Skipping tests: NO");
+						System.out.println("skipping_tests=no");
 						System.exit(0);
 					}
 				}

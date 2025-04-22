@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.21'
+    default: 'v0.0.22'
     required: true
   type:
     description: 'The technology to test.'
@@ -33,7 +33,7 @@ runs:
       shell: bash
       env:
         VERSION: ${{ inputs.version }}
-      run: "${GITHUB_ACTION_PATH}/setup-test.sh"
+      run: ${GITHUB_ACTION_PATH}/setup-test.sh
     - name: 'Run'
       shell: bash
       env:
@@ -42,4 +42,4 @@ runs:
         USER: ${{ inputs.user }}
         PASSWORD: ${{ inputs.password }}
         DB_TYPE: ${{ inputs.type }}
-      run: "${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE} --user ${USER} --password ${PASSWORD} --db-type ${DB_TYPE}"
+      run: ${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE} --user ${USER} --password ${PASSWORD} --db-type ${DB_TYPE} >> $GITHUB_OUTPUT
