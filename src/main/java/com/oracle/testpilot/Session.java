@@ -176,7 +176,7 @@ public class Session {
 
 				default:
 					displayUsage();
-					System.out.println("Wrong arg: "+arg);
+					//System.out.println("Wrong arg: "+arg);
 					throw new TestPilotException(UNKNOWN_COMMAND_LINE_ARGUMENT);
 			}
 		}
