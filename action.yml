@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.14'
+    default: 'v0.0.15'
     required: true
   type:
     description: 'The technology to test.'

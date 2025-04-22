@@ -71,6 +71,7 @@
                             </agent>
                             <buildArgs>
                                 <buildArg>-H:EnableURLProtocols=http,https</buildArg>
+                                <buildArg>-Djdk.internal.httpclient.disableHostnameVerification=true</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
