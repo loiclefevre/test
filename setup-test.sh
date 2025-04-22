@@ -3,7 +3,7 @@
 set -e
 
 echo "::group::📦 Downloading test"
-curl -o ${GITHUB_ACTION_PATH}/test-linux-x86_64.tar.gz https://github.com/loiclefevre/test/releases/download/${VERSION}/test-linux-x86_64.tar.gz
+wget https://github.com/loiclefevre/test/releases/download/${VERSION}/test-linux-x86_64.tar.gz -O ${GITHUB_ACTION_PATH}/test-linux-x86_64.tar.gz -q
 echo "::endgroup::"
 
 echo "::group::📦 Unpacking test"
