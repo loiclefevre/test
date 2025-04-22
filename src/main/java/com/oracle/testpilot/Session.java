@@ -292,10 +292,10 @@ public class Session {
 							String.format("%s:1521/%s", database.getHost(), database.getService());
 
 					// JSON
-					System.out.printf("""
-									{"host": "%s", "service":"%s", "version": "%s", "connection-string": "%s"}%n""",
-							database.getHost(), database.getService(), database.getVersion(),
-							connectionString);
+//					System.out.printf("""
+//									{"host": "%s", "service":"%s", "version": "%s", "connection-string": "%s"}%n""",
+//							database.getHost(), database.getService(), database.getVersion(),
+//							connectionString);
 					System.out.printf("""
 									host=%s
 									service=%s
@@ -469,6 +469,19 @@ public class Session {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
+			final String connectionString = databaseType == DatabaseType.atps ?
+					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
+					:
+					String.format("%s:1521/%s", database.getHost(), database.getService());
+
+			System.out.printf("""
+									host=%s
+									service=%s
+									version=%s
+									connection_string="%s\"""",
+					database.getHost(), database.getService(), database.getVersion(),
+					connectionString);
+
 			// Create temporary SQL script
 			final File tempSQLScript = File.createTempFile("test", ".sql");
 
@@ -569,6 +582,19 @@ public class Session {
 		try {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+
+			final String connectionString = databaseType == DatabaseType.atps ?
+					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
+					:
+					String.format("%s:1521/%s", database.getHost(), database.getService());
+
+			System.out.printf("""
+									host=%s
+									service=%s
+									version=%s
+									connection_string="%s\"""",
+					database.getHost(), database.getService(), database.getVersion(),
+					connectionString);
 
 			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
 
