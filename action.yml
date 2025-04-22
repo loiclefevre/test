@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.23'
+    default: 'v0.0.24'
     required: true
   type:
     description: 'The technology to test.'
@@ -25,6 +25,19 @@ inputs:
     description: 'The service to use.'
     default: 'create-schema'
     required: true
+outputs:
+  host:
+    description: 'The database hostname'
+    value: ${{ steps.run.outputs.host }}
+  service:
+    description: 'The database service'
+    value: ${{ steps.run.outputs.service }}
+  version:
+    description: 'The database version'
+    value: ${{ steps.run.outputs.version }}
+  connection_string:
+    description: 'The database connection string'
+    value: ${{ steps.run.outputs.connection_string }}
 
 runs:
   using: 'composite'
@@ -35,6 +48,7 @@ runs:
         VERSION: ${{ inputs.version }}
       run: ${GITHUB_ACTION_PATH}/setup-test.sh
     - name: 'Run'
+      id: run
       shell: bash
       env:
         RUNID: ${{ github.run_number }}
