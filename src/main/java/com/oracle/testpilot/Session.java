@@ -12,22 +12,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.testpilot.exception.TestPilotException;
 import com.oracle.testpilot.model.Action;
 import com.oracle.testpilot.model.Database;
-import com.oracle.testpilot.model.DatabaseType;
+import com.oracle.testpilot.model.TechnologyType;
 import com.oracle.testpilot.model.GitHubCommittedFiles;
 import com.oracle.testpilot.model.GitHubFilename;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -54,9 +51,9 @@ public class Session {
 	private final String runID;
 	private String apiHOST;
 
-	private String user;
+	private String users;
 	private String password;
-	private DatabaseType databaseType;
+	private TechnologyType technologyType;
 
 	private String prefixList;
 	private String owner;
@@ -89,21 +86,21 @@ public class Session {
 					showVersion = true;
 					break;
 
-				case "--create-schema":
-					action = CREATE_SCHEMA;
+				case "--create-database":
+					action = CREATE_DATABASE;
 					break;
 
-				case "--drop-schema":
-					action = DROP_SCHEMA;
+				case "--drop-database":
+					action = DROP_DATABASE;
 					break;
 
-				case "--get-db-info":
+				case "--get-database-info":
 					action = GET_DATABASE_INFO;
 					break;
 
 				case "--user":
 					if (i + 1 < args.length) {
-						user = args[++i];
+						users = args[++i];
 					}
 					else {
 						throw new TestPilotException(USER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --user parameter"));
@@ -119,18 +116,18 @@ public class Session {
 					}
 					break;
 
-				case "--db-type":
+				case "--type":
 					if (i + 1 < args.length) {
 						try {
-							databaseType = DatabaseType.valueOf(args[++i]);
+							technologyType = TechnologyType.valueOf(args[++i]);
 						}
 						catch (IllegalArgumentException iae) {
 							throw new TestPilotException(WRONG_DATABASE_TYPE_PARAMETER,
-									new IllegalArgumentException("--db-type must be either atps, db19c, db21c, or db23ai"));
+									new IllegalArgumentException("--type must be either atps, db19c, db21c, or db23ai"));
 						}
 					}
 					else {
-						throw new TestPilotException(DBTYPE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --db-type parameter"));
+						throw new TestPilotException(DBTYPE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --type parameter"));
 					}
 					break;
 
@@ -187,18 +184,18 @@ public class Session {
 				Usage: test <service> <options...>
 								
 				Services:
-				--get-db-info: get database information (host and service)
+				--get-database-info: get database information (host and service)
 				    Options:
-				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
-				--create-schema: creates a schema for running the tests
+				    --type <type>              database type (atps, db19c, db21c, db23ai)
+				--create-database: creates a database for running the tests
 				    Options:
-				    --user <user>          user name to be used
-				    --password <password>  password to be used
-				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
-				--drop-schema: drops the schema used for running the tests
+				    --user <user>              user name to be used
+				    --password <password>      password to be used
+				    --type <type>              database type (atps, db19c, db21c, db23ai)
+				--drop-database: drops the database used for running the tests
 				    Options:
-				    --user <user>          user name to be used
-				    --db-type <type>       database type (atps, db19c, db21c, db23ai)
+				    --user <user>              user name to be used
+				    --type <type>              database type (atps, db19c, db21c, db23ai)
 				--skip-testing
 				    Options:
 					--owner <owner>            GitHub project owner
@@ -228,14 +225,14 @@ public class Session {
 				getDatabaseInfo();
 				break;
 
-			case CREATE_SCHEMA:
+			case CREATE_DATABASE:
 				//System.out.printf("%s%n", action.getBanner());
-				createSchema();
+				createDatabase();
 				break;
 
-			case DROP_SCHEMA:
+			case DROP_DATABASE:
 				//System.out.printf("%s%n", action.getBanner());
-				dropSchema();
+				dropDatabase();
 				break;
 
 			case SKIP_TESTING:
@@ -246,16 +243,16 @@ public class Session {
 	}
 
 	private void getDatabaseInfo() {
-		if (databaseType == null) {
+		if (technologyType == null) {
 			throw new TestPilotException(GET_DB_INFO_MISSING_DB_TYPE);
 		}
 
 		try {
-			final String dbType = switch (databaseType) {
-				case DatabaseType.atps -> "autonomous";
-				case DatabaseType.db19c -> "db19c";
-				case DatabaseType.db21c -> "db21c";
-				case DatabaseType.db23ai -> "db23ai";
+			final String dbType = switch (technologyType) {
+				case TechnologyType.atps -> "autonomous";
+				case TechnologyType.db19c -> "db19c";
+				case TechnologyType.db21c -> "db21c";
+				case TechnologyType.db23ai -> "db23ai";
 			};
 
 			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType );
@@ -284,16 +281,11 @@ public class Session {
 					Database database = new ObjectMapper().readValue(response.body(), Database.class);
 					database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
-					final String connectionString = databaseType == DatabaseType.atps ?
+					final String connectionString = technologyType == TechnologyType.atps ?
 							String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
 							:
 							String.format("%s:1521/%s", database.getHost(), database.getService());
 
-					// JSON
-//					System.out.printf("""
-//									{"host": "%s", "service":"%s", "version": "%s", "connection-string": "%s"}%n""",
-//							database.getHost(), database.getService(), database.getVersion(),
-//							connectionString);
 					System.out.printf("""
 									host=%s
 									service=%s
@@ -334,23 +326,23 @@ public class Session {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
-	private void createSchema() {
-		if (user == null || user.isEmpty()) {
-			throw new TestPilotException(CREATE_SCHEMA_MISSING_USER_NAME);
+	private void createDatabase() {
+		if (users == null || users.isEmpty()) {
+			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
 		}
 		if (password == null || password.isEmpty()) {
-			throw new TestPilotException(CREATE_SCHEMA_MISSING_PASSWORD);
+			throw new TestPilotException(CREATE_DATABASE_MISSING_PASSWORD);
 		}
-		if (databaseType == null) {
-			throw new TestPilotException(CREATE_SCHEMA_MISSING_DB_TYPE);
+		if (technologyType == null) {
+			throw new TestPilotException(CREATE_DATABASE_MISSING_DB_TYPE);
 		}
 
 		try {
-			final String dbType = switch (databaseType) {
-				case DatabaseType.atps -> "autonomous";
-				case DatabaseType.db19c -> "db19c";
-				case DatabaseType.db21c -> "db21c";
-				case DatabaseType.db23ai -> "db23ai";
+			final String dbType = switch (technologyType) {
+				case TechnologyType.atps -> "autonomous";
+				case TechnologyType.db19c -> "db19c";
+				case TechnologyType.db21c -> "db21c";
+				case TechnologyType.db23ai -> "db23ai";
 			};
 
 			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
@@ -376,15 +368,15 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					if (databaseType == DatabaseType.atps) {
-						createSchemaWithORDS(response.body());
+					if (technologyType == TechnologyType.atps) {
+						createDatabaseWithORDS(response.body());
 					}
 					else {
-						createSchemaWithSQLcl(response.body());
+						createDatabaseWithSQLcl(response.body());
 					}
 				}
 				else {
-					throw new TestPilotException(CREATE_SCHEMA_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
@@ -397,20 +389,20 @@ public class Session {
 		}
 	}
 
-	private void dropSchema() {
-		if (user == null || user.isEmpty()) {
-			throw new TestPilotException(DROP_SCHEMA_MISSING_USER_NAME);
+	private void dropDatabase() {
+		if (users == null || users.isEmpty()) {
+			throw new TestPilotException(DROP_DATABASE_MISSING_USER_NAME);
 		}
-		if (databaseType == null) {
-			throw new TestPilotException(DROP_SCHEMA_MISSING_DB_TYPE);
+		if (technologyType == null) {
+			throw new TestPilotException(DROP_DATABASE_MISSING_DB_TYPE);
 		}
 
 		try {
-			final String dbType = switch (databaseType) {
-				case DatabaseType.atps -> "autonomous";
-				case DatabaseType.db19c -> "db19c";
-				case DatabaseType.db21c -> "db21c";
-				case DatabaseType.db23ai -> "db23ai";
+			final String dbType = switch (technologyType) {
+				case TechnologyType.atps -> "autonomous";
+				case TechnologyType.db19c -> "db19c";
+				case TechnologyType.db21c -> "db21c";
+				case TechnologyType.db23ai -> "db23ai";
 			};
 
 			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType );
@@ -436,15 +428,15 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					if (databaseType == DatabaseType.atps) {
-						dropSchemaWithORDS(response.body());
+					if (technologyType == TechnologyType.atps) {
+						dropDatabaseWithORDS(response.body());
 					}
 					else {
-						dropSchemaWithSQLcl(response.body());
+						dropDatabaseWithSQLcl(response.body());
 					}
 				}
 				else {
-					throw new TestPilotException(DROP_SCHEMA_REST_ENDPOINT_ISSUE,
+					throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
@@ -462,12 +454,12 @@ public class Session {
 	}
 
 	// For Base DB Systems
-	private void createSchemaWithSQLcl(final String jsonInformation) {
+	private void createDatabaseWithSQLcl(final String jsonInformation) {
 		try {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
-			final String connectionString = databaseType == DatabaseType.atps ?
+			final String connectionString = technologyType == TechnologyType.atps ?
 					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
 					:
 					String.format("%s:1521/%s", database.getHost(), database.getService());
@@ -484,22 +476,26 @@ public class Session {
 			final File tempSQLScript = File.createTempFile("test", ".sql");
 
 			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
-				if (databaseType == DatabaseType.db23ai) {
-					p.println(String.format("""
-												create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
-									alter user %s_%s quota unlimited on users;
-									grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-									exit;""",
-							user, runID, password, user, runID, user, runID));
+				for(String user : users.split(",")) {
+					if (technologyType == TechnologyType.db23ai) {
+						p.println(String.format("""
+													create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+										alter user %s_%s quota unlimited on users;
+										grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
+										""",
+								user, runID, password, user, runID, user, runID));
+					}
+					else {
+						p.println(String.format("""
+													create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+										alter user %s_%s quota unlimited on users;
+										grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
+										""",
+								user, runID, password, user, runID, user, runID));
+					}
 				}
-				else {
-					p.println(String.format("""
-												create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
-									alter user %s_%s quota unlimited on users;
-									grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
-									exit;""",
-							user, runID, password, user, runID, user, runID));
-				}
+
+				p.println("\nexit;");
 			}
 
 			final ProcessBuilder pb = new ProcessBuilder("sql", "-s",
@@ -517,11 +513,11 @@ public class Session {
 			if (returnCode != 0) {
 				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
 			} else {
-				System.out.println("create_schema=ok");
+				System.out.println("create_database=ok");
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_CREATE_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_CREATE_DATABASE_RESPONSE, e);
 		}
 		catch (IOException e) {
 			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
@@ -532,7 +528,7 @@ public class Session {
 	}
 
 	// For Base DB Systems
-	private void dropSchemaWithSQLcl(final String jsonInformation) {
+	private void dropDatabaseWithSQLcl(final String jsonInformation) {
 		try {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
@@ -541,10 +537,11 @@ public class Session {
 			final File tempSQLScript = File.createTempFile("test", ".sql");
 
 			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
-				p.println(String.format("""
-								drop user %s_%s cascade;
-								exit;""",
-						user, runID));
+				for(String user : users.split(",")) {
+					p.println(String.format("drop user %s_%s cascade;",
+							user, runID));
+				}
+				p.print("\nexit;");
 			}
 
 			final ProcessBuilder pb = new ProcessBuilder("sql", "-s",
@@ -562,11 +559,11 @@ public class Session {
 			if (returnCode != 0) {
 				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
 			} else {
-				System.out.println("drop_schema=ok");
+				System.out.println("drop_database=ok");
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_DROP_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_DROP_DATABASE_RESPONSE, e);
 		}
 		catch (IOException e) {
 			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
@@ -576,12 +573,12 @@ public class Session {
 		}
 	}
 
-	private void createSchemaWithORDS(final String jsonInformation) {
+	private void createDatabaseWithORDS(final String jsonInformation) {
 		try {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
-			final String connectionString = databaseType == DatabaseType.atps ?
+			final String connectionString = technologyType == TechnologyType.atps ?
 					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
 					:
 					String.format("%s:1521/%s", database.getHost(), database.getService());
@@ -596,6 +593,16 @@ public class Session {
 
 			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
 
+			final StringBuilder sql = new StringBuilder();
+
+			for(String user : users.split(",")) {
+				sql.append(String.format("""
+							create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
+							alter user %s_%s quota unlimited on data;
+							grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
+							""", user, runID, password, user, runID, user, runID));
+			}
+
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
 					.headers("Accept", "application/json",
@@ -604,11 +611,7 @@ public class Session {
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store")
 					// WE EXPECT ATP-S 23ai
-					.POST(HttpRequest.BodyPublishers.ofString(String.format("""
-							create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
-							alter user %s_%s quota unlimited on data;
-							grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-							""", user, runID, password, user, runID, user, runID)))
+					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
 					.build();
 
 			try (HttpClient client = HttpClient
@@ -621,7 +624,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					System.out.println("create_schema=ok");
+					System.out.println("create_database=ok");
 				}
 				else {
 					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
@@ -630,19 +633,25 @@ public class Session {
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_CREATE_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_CREATE_DATABASE_RESPONSE, e);
 		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
 		}
 	}
 
-	private void dropSchemaWithORDS(final String jsonInformation) {
+	private void dropDatabaseWithORDS(final String jsonInformation) {
 		try {
 			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
 			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
 
 			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
+
+			final StringBuilder sql = new StringBuilder();
+
+			for(String user : users.split(",")) {
+				sql.append(String.format("drop user %s_%s cascade;%n", user, runID));
+			}
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -652,7 +661,7 @@ public class Session {
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store")
 					// WE EXPECT ATP-S 23ai
-					.POST(HttpRequest.BodyPublishers.ofString(String.format("drop user %s_%s cascade;", user, runID)))
+					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
 					.build();
 
 			try (HttpClient client = HttpClient
@@ -665,7 +674,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					System.out.println("drop_schema=ok");
+					System.out.println("drop_database=ok");
 				}
 				else {
 					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
@@ -674,7 +683,7 @@ public class Session {
 			}
 		}
 		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_DROP_SCHEMA_RESPONSE, e);
+			throw new TestPilotException(BAD_DROP_DATABASE_RESPONSE, e);
 		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);

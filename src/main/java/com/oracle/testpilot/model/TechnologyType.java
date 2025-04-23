@@ -6,7 +6,7 @@
  */
 package com.oracle.testpilot.model;
 
-public enum DatabaseType {
+public enum TechnologyType {
 	atps,
 	db19c,
 	db21c,

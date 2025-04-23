@@ -9,22 +9,23 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.27'
+    default: 'v0.0.29'
     required: true
   type:
     description: 'The technology to test.'
     default: 'atps'
     required: true
   user:
-    description: 'The database user name.'
+    description: 'The database user name(s) (comma-separated list if several databases to create).'
     required: false
   password:
     description: 'The database user password.'
     required: false
   service:
     description: 'The service to use.'
-    default: 'create-schema'
+    default: 'create-database'
     required: true
+
 outputs:
   host:
     description: 'The database hostname'
@@ -56,5 +57,5 @@ runs:
         SERVICE: ${{ inputs.service }}
         USER: ${{ inputs.user }}
         PASSWORD: ${{ inputs.password }}
-        DB_TYPE: ${{ inputs.type }}
-      run: ${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE} --user "${USER}" --password "${PASSWORD}" --db-type "${DB_TYPE}" >> $GITHUB_OUTPUT
+        TYPE: ${{ inputs.type }}
+      run: ${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE} --user "${USER}" --password "${PASSWORD}" --type "${TYPE}" >> $GITHUB_OUTPUT

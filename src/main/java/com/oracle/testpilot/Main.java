@@ -21,10 +21,10 @@ public class Main {
 	static {
 		Locale.setDefault(Locale.US);
 		System.setProperty("java.net.useSystemProxies", "true");
-		System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
+		//System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
-	public static final String VERSION = "0.0.27";
+	public static final String VERSION = "0.0.29";
 
 	public static void main(final String[] args) {
 		final long startTime = System.currentTimeMillis();
@@ -43,14 +43,14 @@ public class Main {
 				switch (session.action) {
 					// TODO: change to DATABASE
 					// TODO: be able to create several users!
-					case CREATE_SCHEMA:
-						System.out.printf("Schema creation failed (%d)%n", exitStatus);
+					case CREATE_DATABASE:
+						System.out.printf("Database creation failed (%d)%n", exitStatus);
 						break;
 
 					// TODO: change to DATABASE
 					// TODO: be able to create several users!
-					case DROP_SCHEMA:
-						System.out.printf("Schema deletion failed (%d)%n", exitStatus);
+					case DROP_DATABASE:
+						System.out.printf("Database deletion failed (%d)%n", exitStatus);
 						break;
 
 					case SKIP_TESTING:
@@ -59,8 +59,8 @@ public class Main {
 				}
 			}
 
-			System.out.println("Error: " + te.getMessage());
-			te.printStackTrace();
+			//System.out.println("Error: " + te.getMessage());
+			//te.printStackTrace();
 		}
 
 		System.exit(exitStatus);
