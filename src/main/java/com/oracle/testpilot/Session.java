@@ -600,7 +600,7 @@ public class Session {
 							create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
 							alter user %s_%s quota unlimited on data;
 							grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-							""", user, runID, password, user, runID, user, runID));
+							\n""", user, runID, password, user, runID, user, runID));
 			}
 
 			final HttpRequest request = HttpRequest.newBuilder()
