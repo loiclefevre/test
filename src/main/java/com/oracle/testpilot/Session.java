@@ -745,11 +745,11 @@ public class Session {
 					}
 
 					if (filesNumber == filesMatchingAnyPrefix) {
-						System.out.println("skipping_tests=yes");
+						System.out.println("skip_tests=yes");
 						System.exit(0);
 					}
 					else {
-						System.out.println("skipping_tests=no");
+						System.out.println("skip_tests=no");
 						System.exit(0);
 					}
 				}

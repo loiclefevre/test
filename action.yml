@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.33'
+    default: 'v0.0.34'
     required: true
   type:
     description: 'The technology to test.'
@@ -42,6 +42,9 @@ outputs:
   connection_string:
     description: 'The database connection string'
     value: ${{ steps.run.outputs.connection_string }}
+  skip_tests:
+    description: 'Should skip tests?'
+    value: ${{ steps.run.outputs.skip_tests }}
 
 runs:
   using: 'composite'
