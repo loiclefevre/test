@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v0.0.32
+:project-tag:   v0.0.35
 
 ifdef::env-github[]
 :tip-caption: :bulb:
@@ -33,6 +33,20 @@ Following inputs may be used as `step.with` keys:
 | type     |          | atps            | A valid type of resource to use among: atps, db19c, db21c, db23ai.
 |===
 
+== Outputs
+
+Following outputs may be used as `step.if` or for `step.env` keys:
+
+[%header,cols="<2,<,<3",width="100%"]
+|===
+| Name              | Output of Service | Description
+| host              | create-database   | The host of the database(s).
+| service           | create-database   | The database service name of the database(s).
+| version           | create-database   | The version of the database(s).
+| connection_string | create-database   | The database connection string suffix, it can be used to build the full JDBC connection string.
+| skip_tests        | skip-testing      | 'yes' if tests can be skipped, 'no' otherwise.
+|===
+
 == Usage
 
 [source,yaml]
@@ -41,14 +55,25 @@ Following inputs may be used as `step.with` keys:
 jobs:
   test:
     steps:
+      # Look if committed files should trigger a build and running tests
+      - id: build_guard
+        uses: {project-owner}/{project-name}@{project-tag}
+        with:
+          service: skip-testing
+          prefix_list: .github/workflows/ci.yml,README.md,LICENSE,.gitignore
+
+      # Create the database for testing only if tests must be run
       - id: create_database
         uses: {project-owner}/{project-name}@{project-tag}
+        if: steps.build_guard.outputs.skip_tests == 'no'
         with:
           type: db23ai
           user: test
           password: ${{ secrets.TEST_USER_PASSWORD }}
 
+      # Run the build and the tests against the database
       - name: Run build script
+        if: steps.build_guard.outputs.skip_tests == 'no'
         env:
           RUNID: ${{ github.run_number }}
           HOST: ${{ steps.create_database.outputs.host }}
@@ -56,7 +81,9 @@ jobs:
         run: ./build.sh
         shell: bash
 
+      # Drop the database for testing only if tests must be run
       - uses: {project-owner}/{project-name}@{project-tag}
+        if: steps.build_guard.outputs.skip_tests == 'no'
         with:
           service: drop-database
           type: db23ai
