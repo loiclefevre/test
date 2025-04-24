@@ -1,0 +1,66 @@
+= Setup Test
+:linkattrs:
+:project-owner: llefevre
+:project-name:  test
+:project-tag:   v0.0.32
+
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+image:https://img.shields.io/github/v/release/{project-owner}/{project-name}["GitHub release", link="https://github.com/{project-owner}/{project-name}/releases"]
+
+Sets up link:https://www.oracle.com/database/[Test].
+
+Supported platforms:
+
+- Linux
+
+== Inputs
+
+Following inputs may be used as `step.with` keys:
+
+[%header,cols="<2,<,<,<3",width="100%"]
+|===
+| Name     | Required | Default         | Description
+| service  | Yes      | create-database | A valid service to use among: create-database, drop-database, skip-testing.
+| user     |          |                 | A comma separated list of username(s).
+| password |          |                 | A password for the user(s) (if several users, they will have the same password).
+| type     |          | atps            | A valid type of resource to use among: atps, db19c, db21c, db23ai.
+|===
+
+== Usage
+
+[source,yaml]
+[subs="attributes"]
+----
+jobs:
+  test:
+    steps:
+      - id: create_database
+        uses: {project-owner}/{project-name}@{project-tag}
+        with:
+          type: db23ai
+          user: test
+          password: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: Run build script
+        env:
+          RUNID: ${{ github.run_number }}
+          HOST: ${{ steps.create_database.outputs.host }}
+          SERVICE: ${{ steps.create_database.outputs.service }}
+        run: ./build.sh
+        shell: bash
+
+      - uses: {project-owner}/{project-name}@{project-tag}
+        with:
+          service: drop-database
+          type: db23ai
+          user: test
+
+----
+

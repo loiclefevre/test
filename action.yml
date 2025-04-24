@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.32'
+    default: 'v0.0.33'
     required: true
   type:
     description: 'The technology to test.'
@@ -25,6 +25,9 @@ inputs:
     description: 'The service to use.'
     default: 'create-database'
     required: true
+  prefix_list:
+    description: 'A comma separated list of file(s) or folder(s) that if changed should not trigger any non-regression test.'
+    required: false
 
 outputs:
   host:
@@ -56,5 +59,6 @@ runs:
         RUNID: ${{ github.run_number }}
       run: |
         ${GITHUB_ACTION_PATH}/setup-testpilot --${{ inputs.service }} \
-        --user "${{ inputs.user }}" --password "${{ inputs.password }}" --type "${{ inputs.type }}" >> $GITHUB_OUTPUT
-# skip-testing --owner hibernate --repository hibernate-orm --sha 2bd500bb009d794b6b7dd5b3472eee6985847a07 --prefix-list documentation/,README.adoc,branching.adoc,dialects.adoc,hibernate_logo.gif,lgpl.txt,migration-guide.adoc,release_notes.md,test-case-guide.adoc
+        --user "${{ inputs.user }}" --password "${{ inputs.password }}" --type "${{ inputs.type }}" \
+        --owner "${{ github.repository_owner }}" --repository "${{ github.event.repository.name }}" --sha "${{ github.sha }}" \
+        --prefix-list "${{ inputs.prefix_list }}" >> $GITHUB_OUTPUT
