@@ -58,4 +58,5 @@ runs:
         USER: ${{ inputs.user }}
         PASSWORD: ${{ inputs.password }}
         TYPE: ${{ inputs.type }}
-      run: ${GITHUB_ACTION_PATH}/setup-testpilot --${SERVICE} --user "${USER}" --password "${PASSWORD}" --type "${TYPE}" >> $GITHUB_OUTPUT
+      run: ${GITHUB_ACTION_PATH}/setup-testpilot --${{ inputs.service }} --user "${USER}" --password "${PASSWORD}" --type "${TYPE}" >> $GITHUB_OUTPUT
+# skip-testing --owner hibernate --repository hibernate-orm --sha 2bd500bb009d794b6b7dd5b3472eee6985847a07 --prefix-list documentation/,README.adoc,branching.adoc,dialects.adoc,hibernate_logo.gif,lgpl.txt,migration-guide.adoc,release_notes.md,test-case-guide.adoc
