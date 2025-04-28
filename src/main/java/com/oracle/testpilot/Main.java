@@ -24,7 +24,7 @@ public class Main {
 		System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
-	public static final String VERSION = "0.0.35";
+	public static final String VERSION = "0.0.36";
 
 	public static void main(final String[] args) {
 		final long startTime = System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class Main {
 			}
 
 			//System.out.println("Error: " + te.getMessage());
-			te.printStackTrace();
+			//te.printStackTrace();
 		}
 
 		System.exit(exitStatus);

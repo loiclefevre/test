@@ -60,6 +60,8 @@ public class Session {
 	private String repository;
 	private String sha;
 
+	private static final String SQLCL_PATH = "/home/ubuntu/sqlcl/bin/sql";
+
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
@@ -498,7 +500,7 @@ public class Session {
 				p.println("\nexit;");
 			}
 
-			final ProcessBuilder pb = new ProcessBuilder("sql", "-s",
+			final ProcessBuilder pb = new ProcessBuilder(SQLCL_PATH, "-s",
 					String.format("system/%s@%s:1521/%s",
 							database.getPassword(),
 							database.getHost(),
@@ -544,7 +546,7 @@ public class Session {
 				p.print("\nexit;");
 			}
 
-			final ProcessBuilder pb = new ProcessBuilder("sql", "-s",
+			final ProcessBuilder pb = new ProcessBuilder(SQLCL_PATH, "-s",
 					String.format("system/%s@%s:1521/%s",
 							database.getPassword(),
 							database.getHost(),
