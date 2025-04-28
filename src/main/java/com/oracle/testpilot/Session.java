@@ -508,6 +508,8 @@ public class Session {
 					tempSQLScript.getCanonicalPath())
 					.inheritIO();
 
+			pb.environment().put("JAVA_HOME","/home/ubuntu/graalvm-jdk-24.0.1+9.1");
+
 			final Process p = pb.start();
 
 			final int returnCode = p.waitFor();
@@ -553,6 +555,8 @@ public class Session {
 							database.getService()),
 					tempSQLScript.getCanonicalPath())
 					.inheritIO();
+
+			pb.environment().put("JAVA_HOME","/home/ubuntu/graalvm-jdk-24.0.1+9.1");
 
 			final Process p = pb.start();
 

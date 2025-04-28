@@ -13,7 +13,3 @@ tar -xf ${GITHUB_ACTION_PATH}/test-linux-x86_64.tar.gz -C ${GITHUB_ACTION_PATH}/
 echo "::endgroup::"
 
 fi;
-
-echo `id`
-echo $PATH
-echo $JAVA_HOME
