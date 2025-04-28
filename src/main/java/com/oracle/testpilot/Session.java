@@ -12,9 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.testpilot.exception.TestPilotException;
 import com.oracle.testpilot.model.Action;
 import com.oracle.testpilot.model.Database;
-import com.oracle.testpilot.model.TechnologyType;
 import com.oracle.testpilot.model.GitHubCommittedFiles;
 import com.oracle.testpilot.model.GitHubFilename;
+import com.oracle.testpilot.model.TechnologyType;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -257,7 +257,7 @@ public class Session {
 				case TechnologyType.db23ai -> "db23ai";
 			};
 
-			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType );
+			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -313,9 +313,15 @@ public class Session {
 	private static SSLContext createCustomSSLContext() {
 		final TrustManager[] trustAllCerts = new TrustManager[]{
 				new X509TrustManager() {
-					public java.security.cert.X509Certificate[] getAcceptedIssuers() { return new java.security.cert.X509Certificate[0]; }
-					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+						return new java.security.cert.X509Certificate[0];
+					}
+
+					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+					}
+
+					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+					}
 				}
 		};
 
@@ -328,6 +334,7 @@ public class Session {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
+
 	private void createDatabase() {
 		if (users == null || users.isEmpty()) {
 			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
@@ -407,7 +414,7 @@ public class Session {
 				case TechnologyType.db23ai -> "db23ai";
 			};
 
-			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType );
+			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -467,10 +474,10 @@ public class Session {
 					String.format("%s:1521/%s", database.getHost(), database.getService());
 
 			System.out.printf("""
-									host=%s
-									service=%s
-									version=%s
-									connection_string="%s\"""",
+							host=%s
+							service=%s
+							version=%s
+							connection_string="%s\"""",
 					database.getHost(), database.getService(), database.getVersion(),
 					connectionString);
 
@@ -478,10 +485,10 @@ public class Session {
 			final File tempSQLScript = File.createTempFile("test", ".sql");
 
 			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
-				for(String user : users.split(",")) {
+				for (String user : users.split(",")) {
 					if (technologyType == TechnologyType.db23ai) {
 						p.println(String.format("""
-													create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+										create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
 										alter user %s_%s quota unlimited on users;
 										grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
 										""",
@@ -489,7 +496,7 @@ public class Session {
 					}
 					else {
 						p.println(String.format("""
-													create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+										create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
 										alter user %s_%s quota unlimited on users;
 										grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
 										""",
@@ -505,10 +512,10 @@ public class Session {
 							database.getPassword(),
 							database.getHost(),
 							database.getService()),
-					tempSQLScript.getCanonicalPath())
+					"@" + tempSQLScript.getCanonicalPath())
 					.inheritIO();
 
-			pb.environment().put("JAVA_HOME","/home/ubuntu/graalvm-jdk-24.0.1+9.1");
+			pb.environment().put("JAVA_HOME", "/home/ubuntu/graalvm-jdk-24.0.1+9.1");
 
 			final Process p = pb.start();
 
@@ -516,7 +523,8 @@ public class Session {
 
 			if (returnCode != 0) {
 				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
-			} else {
+			}
+			else {
 				System.out.println("create_database=ok");
 			}
 		}
@@ -541,7 +549,7 @@ public class Session {
 			final File tempSQLScript = File.createTempFile("test", ".sql");
 
 			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
-				for(String user : users.split(",")) {
+				for (String user : users.split(",")) {
 					p.println(String.format("drop user %s_%s cascade;",
 							user, runID));
 				}
@@ -553,10 +561,10 @@ public class Session {
 							database.getPassword(),
 							database.getHost(),
 							database.getService()),
-					tempSQLScript.getCanonicalPath())
+					"@" + tempSQLScript.getCanonicalPath())
 					.inheritIO();
 
-			pb.environment().put("JAVA_HOME","/home/ubuntu/graalvm-jdk-24.0.1+9.1");
+			pb.environment().put("JAVA_HOME", "/home/ubuntu/graalvm-jdk-24.0.1+9.1");
 
 			final Process p = pb.start();
 
@@ -564,7 +572,8 @@ public class Session {
 
 			if (returnCode != 0) {
 				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
-			} else {
+			}
+			else {
 				System.out.println("drop_database=ok");
 			}
 		}
@@ -590,10 +599,10 @@ public class Session {
 					String.format("%s:1521/%s", database.getHost(), database.getService());
 
 			System.out.printf("""
-									host=%s
-									service=%s
-									version=%s
-									connection_string="%s\"""",
+							host=%s
+							service=%s
+							version=%s
+							connection_string="%s\"""",
 					database.getHost(), database.getService(), database.getVersion(),
 					connectionString);
 
@@ -601,12 +610,12 @@ public class Session {
 
 			final StringBuilder sql = new StringBuilder();
 
-			for(String user : users.split(",")) {
+			for (String user : users.split(",")) {
 				sql.append(String.format("""
-							create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
-							alter user %s_%s quota unlimited on data;
-							grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-							\n""", user, runID, password, user, runID, user, runID));
+						create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
+						alter user %s_%s quota unlimited on data;
+						grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
+						\n""", user, runID, password, user, runID, user, runID));
 			}
 
 			final HttpRequest request = HttpRequest.newBuilder()
@@ -655,7 +664,7 @@ public class Session {
 
 			final StringBuilder sql = new StringBuilder();
 
-			for(String user : users.split(",")) {
+			for (String user : users.split(",")) {
 				sql.append(String.format("drop user %s_%s cascade;%n", user, runID));
 			}
 
