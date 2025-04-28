@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.37'
+    default: 'v0.0.38'
     required: true
   type:
     description: 'The technology to test.'
@@ -57,7 +57,7 @@ runs:
 
     - name: 'Run'
       id: run
-      shell: bash
+      shell: bash -leo pipefail {0}
       env:
         RUNID: ${{ github.run_number }}
       run: |
