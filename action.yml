@@ -7,10 +7,10 @@ branding:
   color: 'green'
 
 inputs:
-  version:
-    description: 'The version to use.'
-    default: 'v0.0.40'
-    required: true
+#  version:
+#    description: 'The version to use.'
+#    default: 'v0.0.40'
+#    required: true
   type:
     description: 'The technology to test.'
     default: 'atps'

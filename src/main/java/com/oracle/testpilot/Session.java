@@ -665,7 +665,7 @@ public class Session {
 			final StringBuilder sql = new StringBuilder();
 
 			for (String user : users.split(",")) {
-				sql.append(String.format("drop user %s_%s cascade;%n", user, runID));
+				sql.append(String.format("drop user %s_%s cascade;\n", user, runID));
 			}
 
 			final HttpRequest request = HttpRequest.newBuilder()
