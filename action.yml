@@ -7,40 +7,40 @@ branding:
   color: 'green'
 
 inputs:
-#  version:
-#    description: 'The version to use.'
-#    default: 'v0.0.40'
-#    required: true
-  type:
-    description: 'The technology to test.'
-    default: 'atps'
+  version:
+    description: 'The version to use.'
+    default: 'v0.0.42'
+    required: true
+  action:
+    description: 'The action to run.'
+    default: 'create'
+    required: true
+  oci-service:
+    description: 'The Oracle Cloud Infrastructure service to test.'
+    default: 'autonomous-transaction-processing-serverless'
     required: true
   user:
-    description: 'The database user name(s) (comma-separated list if several databases to create).'
+    description: 'The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space).'
     required: false
   password:
-    description: 'The database user password.'
+    description: 'The database user password to be used for database creation. If multiple users are required then they will all have the very same password.'
     required: false
-  service:
-    description: 'The service to use.'
-    default: 'create-database'
-    required: true
   prefix_list:
-    description: 'A comma separated list of file(s) or folder(s) that if changed should not trigger any non-regression test.'
+    description: 'A comma separated list of file(s) or folder(s) that if changed should not trigger any test (example: folder containing documentation).'
     required: false
 
 outputs:
-  host:
-    description: 'The database hostname'
+  database_host:
+    description: 'The database hostname.'
     value: ${{ steps.run.outputs.host }}
-  service:
-    description: 'The database service'
-    value: ${{ steps.run.outputs.service }}
-  version:
-    description: 'The database version'
+  database_service:
+    description: 'The database service name.'
+    value: ${{ steps.run.outputs.database_service }}
+  database_version:
+    description: 'The database version.'
     value: ${{ steps.run.outputs.version }}
-  connection_string:
-    description: 'The database connection string'
+  connection_string_suffix:
+    description: 'The database connection string suffix (after @).'
     value: ${{ steps.run.outputs.connection_string }}
   skip_tests:
     description: 'Should skip tests?'
@@ -57,6 +57,7 @@ runs:
 
     - name: 'Run'
       id: run
+      if: inputs. == 'no'
       shell: bash -leo pipefail {0}
       env:
         RUNID: ${{ github.run_number }}

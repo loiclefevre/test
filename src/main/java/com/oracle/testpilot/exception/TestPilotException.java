@@ -11,7 +11,6 @@ public class TestPilotException extends RuntimeException {
 	public static final int WRONG_DATABASE_TYPE_PARAMETER = 2;
 	public static final int WRONG_MAIN_CONTROLLER_URI = 4;
 	public static final int CREATE_DATABASE_REST_ENDPOINT_ISSUE = 5;
-	public static final int BAD_CREATE_DATABASE_RESPONSE = 6;
 	public static final int WRONG_MAIN_CONTROLLER_REST_CALL = 7;
 	public static final int WRONG_ATPS_REST_CALL = 8;
 	public static final int ATPS_REST_ENDPOINT_ISSUE = 9;
@@ -40,7 +39,6 @@ public class TestPilotException extends RuntimeException {
 	public static final int DROP_DATABASE_MISSING_USER_NAME = 32;
 	public static final int DROP_DATABASE_MISSING_DB_TYPE = 33;
 	public static final int DROP_DATABASE_REST_ENDPOINT_ISSUE = 34;
-	public static final int BAD_DROP_DATABASE_RESPONSE = 35;
 
 	private final int errorCode;
 

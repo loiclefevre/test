@@ -16,6 +16,12 @@ image:https://img.shields.io/github/v/release/{project-owner}/{project-name}["Gi
 
 Sets up link:https://www.oracle.com/database/[Test].
 
+This GitHub Action helps the integration of Test within your GitHub Action workflows. It provides several `actions`:
+
+- `create`: used to request the provisioning of the OCI service to test
+- `drop`: used to de-provision the OCI service tested
+- `skip-testing`: used to check if this GitHub commit should not perform any non-regression test, for example if changes involve files or folders that do not contain source code. By using the output of this action, numerous GitHub Action workflows can see their runtime durations drastically reduced.
+
 Supported platforms:
 
 - Linux
@@ -27,10 +33,12 @@ Following inputs may be used as `step.with` keys:
 [%header,cols="<2,<,<,<3",width="100%"]
 |===
 | Name     | Required | Default         | Description
-| service  | Yes      | create-database | A valid service to use among: create-database, drop-database, skip-testing.
-| user     |          |                 | A comma separated list of username(s).
-| password |          |                 | A password for the user(s) (if several users, they will have the same password).
-| type     |          | atps            | A valid type of resource to use among: atps, db19c, db21c, db23ai.
+| action  | Yes      | create | A valid action among: `create`, `drop`, `skip-testing`.
+| oci-service |          | autonomous-transaction-processing-serverless            | A valid Oracle Cloud Infrastructure service to be tested.
+Valid OCI service are: `autonomous-transaction-processing-serverless`, `base-database-service-19c`, `base-database-service-21c`, and `base-database-service-23ai`.
+| user     |          |                 | The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space).
+| password |          |                 | The database user password to be used for database creation. If multiple users are required then they will all have the very same password.
+| prefix_list |  |  | A comma separated list of file(s) or folder(s) that if changed should not trigger any test (example: folder containing documentation).
 |===
 
 == Outputs
@@ -39,11 +47,11 @@ Following outputs may be used as `step.if` or for `step.env` keys:
 
 [%header,cols="<2,<,<3",width="100%"]
 |===
-| Name              | Output of Service | Description
-| host              | create-database   | The host of the database(s).
-| service           | create-database   | The database service name of the database(s).
-| version           | create-database   | The version of the database(s).
-| connection_string | create-database   | The database connection string suffix, it can be used to build the full JDBC connection string.
+| Name              | Output of Action | Description
+| database_host              | create   | The hostname of the database(s).
+| database_service           | create   | The database service name of the database(s).
+| database_version           | create   | The version of the database(s).
+| connection_string_suffix | create   | The database connection string suffix (after @), it can be used to build the full JDBC connection string.
 | skip_tests        | skip-testing      | 'yes' if tests can be skipped, 'no' otherwise.
 |===
 
@@ -59,7 +67,7 @@ jobs:
       - id: build_guard
         uses: {project-owner}/{project-name}@{project-tag}
         with:
-          service: skip-testing
+          action: skip-testing
           prefix_list: .github/workflows/ci.yml,README.md,LICENSE,.gitignore
 
       # Create the database for testing only if tests must be run
@@ -67,7 +75,8 @@ jobs:
         uses: {project-owner}/{project-name}@{project-tag}
         if: steps.build_guard.outputs.skip_tests == 'no'
         with:
-          type: db23ai
+          oci-service: base-database-service-23ai
+          action: create
           user: test
           password: ${{ secrets.TEST_USER_PASSWORD }}
 
@@ -76,8 +85,8 @@ jobs:
         if: steps.build_guard.outputs.skip_tests == 'no'
         env:
           RUNID: ${{ github.run_number }}
-          HOST: ${{ steps.create_database.outputs.host }}
-          SERVICE: ${{ steps.create_database.outputs.service }}
+          DATABASE_HOST: ${{ steps.create_database.outputs.database_host }}
+          DATABASE_SERVICE: ${{ steps.create_database.outputs.database_service }}
         run: ./build.sh
         shell: bash
 
@@ -85,8 +94,8 @@ jobs:
       - uses: {project-owner}/{project-name}@{project-tag}
         if: steps.build_guard.outputs.skip_tests == 'no'
         with:
-          service: drop-database
-          type: db23ai
+          oci-service: base-database-service-23ai
+          action: drop
           user: test
 
 ----

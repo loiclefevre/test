@@ -6,10 +6,8 @@
  */
 package com.oracle.testpilot;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oracle.testpilot.exception.TestPilotException;
+import com.oracle.testpilot.json.JSON;
 import com.oracle.testpilot.model.Action;
 import com.oracle.testpilot.model.Database;
 import com.oracle.testpilot.model.GitHubCommittedFiles;
@@ -280,8 +278,8 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					Database database = new ObjectMapper().readValue(response.body(), Database.class);
-					database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+					Database database = new JSON<>(Database.class).parse(response.body());
+					database = new JSON<>(Database.class).parse(database.getDatabase());
 
 					final String connectionString = technologyType == TechnologyType.atps ?
 							String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
@@ -289,10 +287,10 @@ public class Session {
 							String.format("%s:1521/%s", database.getHost(), database.getService());
 
 					System.out.printf("""
-									host=%s
-									service=%s
-									version=%s
-									connection_string="%s\"""",
+									database_host=%s
+									database_service=%s
+									database_version=%s
+									connection_string_suffix="%s\"""",
 							database.getHost(), database.getService(), database.getVersion(),
 							connectionString);
 				}
@@ -465,8 +463,8 @@ public class Session {
 	// For Base DB Systems
 	private void createDatabaseWithSQLcl(final String jsonInformation) {
 		try {
-			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
-			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+			Database database = new JSON<>(Database.class).parse(jsonInformation);
+			database = new JSON<>(Database.class).parse(database.getDatabase());
 
 			final String connectionString = technologyType == TechnologyType.atps ?
 					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
@@ -474,10 +472,10 @@ public class Session {
 					String.format("%s:1521/%s", database.getHost(), database.getService());
 
 			System.out.printf("""
-							host=%s
-							service=%s
-							version=%s
-							connection_string="%s\"""",
+							database_host=%s
+							database_service=%s
+							database_version=%s
+							connection_string_suffix="%s\"""",
 					database.getHost(), database.getService(), database.getVersion(),
 					connectionString);
 
@@ -528,9 +526,6 @@ public class Session {
 				System.out.println("create_database=ok");
 			}
 		}
-		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_CREATE_DATABASE_RESPONSE, e);
-		}
 		catch (IOException e) {
 			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
 		}
@@ -542,8 +537,8 @@ public class Session {
 	// For Base DB Systems
 	private void dropDatabaseWithSQLcl(final String jsonInformation) {
 		try {
-			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
-			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+			Database database = new JSON<>(Database.class).parse(jsonInformation);
+			database = new JSON<>(Database.class).parse(database.getDatabase());
 
 			// Create temporary SQL script
 			final File tempSQLScript = File.createTempFile("test", ".sql");
@@ -577,9 +572,6 @@ public class Session {
 				System.out.println("drop_database=ok");
 			}
 		}
-		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_DROP_DATABASE_RESPONSE, e);
-		}
 		catch (IOException e) {
 			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
 		}
@@ -590,8 +582,8 @@ public class Session {
 
 	private void createDatabaseWithORDS(final String jsonInformation) {
 		try {
-			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
-			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+			Database database = new JSON<>(Database.class).parse(jsonInformation);
+			database = new JSON<>(Database.class).parse(database.getDatabase());
 
 			final String connectionString = technologyType == TechnologyType.atps ?
 					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
@@ -599,10 +591,10 @@ public class Session {
 					String.format("%s:1521/%s", database.getHost(), database.getService());
 
 			System.out.printf("""
-							host=%s
-							service=%s
-							version=%s
-							connection_string="%s\"""",
+							database_host=%s
+							database_service=%s
+							database_version=%s
+							connection_string_suffix="%s\"""",
 					database.getHost(), database.getService(), database.getVersion(),
 					connectionString);
 
@@ -647,9 +639,6 @@ public class Session {
 				}
 			}
 		}
-		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_CREATE_DATABASE_RESPONSE, e);
-		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
 		}
@@ -657,8 +646,8 @@ public class Session {
 
 	private void dropDatabaseWithORDS(final String jsonInformation) {
 		try {
-			Database database = new ObjectMapper().readValue(jsonInformation, Database.class);
-			database = new ObjectMapper().readValue(database.getDatabase(), Database.class);
+			Database database = new JSON<>(Database.class).parse(jsonInformation);
+			database = new JSON<>(Database.class).parse(database.getDatabase());
 
 			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
 
@@ -696,9 +685,6 @@ public class Session {
 							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
 				}
 			}
-		}
-		catch (JsonProcessingException e) {
-			throw new TestPilotException(BAD_DROP_DATABASE_RESPONSE, e);
 		}
 		catch (URISyntaxException | IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
@@ -740,7 +726,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					final GitHubCommittedFiles files = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(response.body(), GitHubCommittedFiles.class);
+					final GitHubCommittedFiles files = new JSON<>(GitHubCommittedFiles.class).parse(response.body());
 
 					// Test now against prefixes
 					final String[] prefixes = prefixList.split(",");
