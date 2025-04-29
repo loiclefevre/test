@@ -78,8 +78,6 @@
                                 <buildArg>-H:-CheckToolchain</buildArg>
                                 <!-- buildArg>- -initialize-at-build-time=sun.instrument.InstrumentationImpl</buildArg -->
 
-                                <buildArg>--features=oracle.nativeimage.CharacterSetFeature</buildArg>
-                                <buildArg>--features=oracle.nativeimage.NativeImageFeature</buildArg>
                                 <buildArg>--trace-class-initialization=oracle.sql.CharacterSet</buildArg>
                                 <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet</buildArg>
                                 <buildArg>--initialize-at-build-time=oracle.sql.ConverterArchive</buildArg>
