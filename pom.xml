@@ -6,7 +6,7 @@
 
     <groupId>com.oracle.testpilot</groupId>
     <artifactId>testpilot-services</artifactId>
-    <version>0.0.45</version>
+    <version>0.0.46</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
 
@@ -79,6 +79,7 @@
                                 <!-- buildArg>- -initialize-at-build-time=sun.instrument.InstrumentationImpl</buildArg -->
 
                                 <buildArg>--trace-class-initialization=oracle.sql.CharacterSet</buildArg>
+                                <buildArg>--initialize-at-build-time=oracle.sql.CharacterSetFactoryDefault</buildArg>
                                 <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet</buildArg>
                                 <buildArg>--initialize-at-build-time=oracle.sql.ConverterArchive</buildArg>
                                 <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet$CharacterSetNamesMapHolder</buildArg>
