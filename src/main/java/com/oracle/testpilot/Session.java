@@ -30,7 +30,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-import static com.oracle.testpilot.Main.VERSION;
 import static com.oracle.testpilot.exception.TestPilotException.*;
 import static com.oracle.testpilot.model.Action.*;
 
@@ -42,8 +41,6 @@ import static com.oracle.testpilot.model.Action.*;
  */
 public class Session {
 
-	private boolean showVersion;
-
 	public Action action;
 
 	private final String runID;
@@ -51,7 +48,7 @@ public class Session {
 
 	private String users;
 	private String password;
-	private TechnologyType technologyType;
+	private String technologyType;
 
 	private String prefixList;
 	private String owner;
@@ -81,21 +78,12 @@ public class Session {
 					System.exit(0);
 					break;
 
-				case "--version":
-				case "-v":
-					showVersion = true;
+				case "--create":
+					action = CREATE;
 					break;
 
-				case "--create-database":
-					action = CREATE_DATABASE;
-					break;
-
-				case "--drop-database":
-					action = DROP_DATABASE;
-					break;
-
-				case "--get-database-info":
-					action = GET_DATABASE_INFO;
+				case "--drop":
+					action = DROP;
 					break;
 
 				case "--user":
@@ -116,18 +104,29 @@ public class Session {
 					}
 					break;
 
-				case "--type":
+				case "--oci-service":
 					if (i + 1 < args.length) {
 						try {
-							technologyType = TechnologyType.valueOf(args[++i]);
+							technologyType = args[++i];
+
+							switch(technologyType) {
+								case "autonomous-transaction-processing-serverless":
+								case "base-database-service-19c":
+								case "base-database-service-21c":
+								case "base-database-service-23ai":
+									break;
+
+								default:
+									throw new IllegalArgumentException(technologyType);
+							}
 						}
 						catch (IllegalArgumentException iae) {
-							throw new TestPilotException(WRONG_DATABASE_TYPE_PARAMETER,
-									new IllegalArgumentException("--type must be either atps, db19c, db21c, or db23ai"));
+							throw new TestPilotException(WRONG_OCI_SERVICE_PARAMETER,
+									new IllegalArgumentException("--oci-service must be either autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, or base-database-service-23ai"));
 						}
 					}
 					else {
-						throw new TestPilotException(DBTYPE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --type parameter"));
+						throw new TestPilotException(OCI_SERVICE_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --oci-service parameter"));
 					}
 					break;
 
@@ -181,56 +180,37 @@ public class Session {
 
 	private void displayUsage() {
 		System.out.println("""
-				Usage: test <service> <options...>
+				Usage: test <action> <options...>
 								
-				Services:
-				--get-database-info: get database information (host and service)
+				Action:
+				--create: to provision the requested Oracle Cloud Infrastructure service to test
 				    Options:
-				    --type <type>              database type (atps, db19c, db21c, db23ai)
-				--create-database: creates a database for running the tests
+				    --oci-service <value>      OCI service type (autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, base-database-service-23ai)
+				    --user <user>              user name to be used (if several, then comma separated list without any space)
+				    --password <password>      password to be used (if several users, they will have the same password)
+				--drop: to de-provision the Oracle Cloud Infrastructure service
 				    Options:
-				    --user <user>              user name to be used
-				    --password <password>      password to be used
-				    --type <type>              database type (atps, db19c, db21c, db23ai)
-				--drop-database: drops the database used for running the tests
-				    Options:
-				    --user <user>              user name to be used
-				    --type <type>              database type (atps, db19c, db21c, db23ai)
+				    --oci-service <value>      OCI service type (autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, base-database-service-23ai)
+				    --user <user>              user name to be used (if several, then comma separated list without any space)
 				--skip-testing
 				    Options:
 					--owner <owner>            GitHub project owner
 					--repository <repository>  GitHub project repository
 					--sha <sha>                GitHub commit sha to check
-					--prefix-list <p1,p2,...>  Comma-separated list of prefixes that will NOT trigger tests
+					--prefix-list <p1,p2,...>  comma separated list of prefixes that will NOT trigger tests (can be file and folders)
 				""");
-	}
-
-	public void banner() {
-		switch (action) {
-			case GET_DATABASE_INFO:
-				return;
-			default:
-				if (showVersion) {
-					System.out.printf("test_version=%s%n", VERSION);
-				}
-				break;
-		}
 	}
 
 	public void run() {
 		if (action == null) return;
 
 		switch (action) {
-			case GET_DATABASE_INFO:
-				getDatabaseInfo();
-				break;
-
-			case CREATE_DATABASE:
+			case CREATE:
 				//System.out.printf("%s%n", action.getBanner());
 				createDatabase();
 				break;
 
-			case DROP_DATABASE:
+			case DROP:
 				//System.out.printf("%s%n", action.getBanner());
 				dropDatabase();
 				break;
@@ -239,72 +219,6 @@ public class Session {
 				//System.out.printf("%s%n", action.getBanner());
 				skipTesting();
 				break;
-		}
-	}
-
-	private void getDatabaseInfo() {
-		if (technologyType == null) {
-			throw new TestPilotException(GET_DB_INFO_MISSING_DB_TYPE);
-		}
-
-		try {
-			final String dbType = switch (technologyType) {
-				case TechnologyType.atps -> "autonomous";
-				case TechnologyType.db19c -> "db19c";
-				case TechnologyType.db21c -> "db21c";
-				case TechnologyType.db23ai -> "db23ai";
-			};
-
-			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
-
-			final HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(uri))
-					.headers("Accept", "application/json",
-							"Pragma", "no-cache",
-							"Cache-Control", "no-store")
-					.GET()
-					.build();
-
-			final SSLContext sslContext = createCustomSSLContext();
-
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.sslContext(sslContext)
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
-
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-				if (response.statusCode() == 200) {
-					Database database = new JSON<>(Database.class).parse(response.body());
-					database = new JSON<>(Database.class).parse(database.getDatabase());
-
-					final String connectionString = technologyType == TechnologyType.atps ?
-							String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
-							:
-							String.format("%s:1521/%s", database.getHost(), database.getService());
-
-					System.out.printf("""
-									database_host=%s
-									database_service=%s
-									database_version=%s
-									connection_string_suffix="%s\"""",
-							database.getHost(), database.getService(), database.getVersion(),
-							connectionString);
-				}
-				else {
-					throw new TestPilotException(GET_DB_INFO_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
-				}
-			}
-		}
-		catch (URISyntaxException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
-		}
-		catch (IOException | InterruptedException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
 	}
 
@@ -345,12 +259,7 @@ public class Session {
 		}
 
 		try {
-			final String dbType = switch (technologyType) {
-				case TechnologyType.atps -> "autonomous";
-				case TechnologyType.db19c -> "db19c";
-				case TechnologyType.db21c -> "db21c";
-				case TechnologyType.db23ai -> "db23ai";
-			};
+			final String dbType = getInternalTechnologyType(technologyType);
 
 			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
 
@@ -375,7 +284,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					if (technologyType == TechnologyType.atps) {
+					if (dbType.equals(TechnologyType.AUTONOMOUS)) {
 						createDatabaseWithORDS(response.body());
 					}
 					else {
@@ -396,6 +305,16 @@ public class Session {
 		}
 	}
 
+	private String getInternalTechnologyType(String technologyType) {
+		return switch (technologyType) {
+			case "autonomous-transaction-processing-serverless" -> TechnologyType.AUTONOMOUS;
+			case "base-database-service-19c" -> TechnologyType.DB19C;
+			case "base-database-service-21c" -> TechnologyType.DB21C;
+			case "base-database-service-23ai" -> TechnologyType.DB23AI;
+			default -> null;
+		};
+	}
+
 	private void dropDatabase() {
 		if (users == null || users.isEmpty()) {
 			throw new TestPilotException(DROP_DATABASE_MISSING_USER_NAME);
@@ -405,12 +324,7 @@ public class Session {
 		}
 
 		try {
-			final String dbType = switch (technologyType) {
-				case TechnologyType.atps -> "autonomous";
-				case TechnologyType.db19c -> "db19c";
-				case TechnologyType.db21c -> "db21c";
-				case TechnologyType.db23ai -> "db23ai";
-			};
+			final String dbType = getInternalTechnologyType(technologyType);
 
 			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
 
@@ -435,7 +349,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					if (technologyType == TechnologyType.atps) {
+					if (dbType.equals(TechnologyType.AUTONOMOUS)) {
 						dropDatabaseWithORDS(response.body());
 					}
 					else {
@@ -466,7 +380,9 @@ public class Session {
 			Database database = new JSON<>(Database.class).parse(jsonInformation);
 			database = new JSON<>(Database.class).parse(database.getDatabase());
 
-			final String connectionString = technologyType == TechnologyType.atps ?
+			final String dbType = getInternalTechnologyType(technologyType);
+
+			final String connectionString = dbType.equals(TechnologyType.AUTONOMOUS) ?
 					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
 					:
 					String.format("%s:1521/%s", database.getHost(), database.getService());
@@ -484,7 +400,7 @@ public class Session {
 
 			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
 				for (String user : users.split(",")) {
-					if (technologyType == TechnologyType.db23ai) {
+					if (dbType.equals(TechnologyType.DB23AI)) {
 						p.println(String.format("""
 										create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
 										alter user %s_%s quota unlimited on users;
@@ -512,8 +428,6 @@ public class Session {
 							database.getService()),
 					"@" + tempSQLScript.getCanonicalPath())
 					.inheritIO();
-
-			pb.environment().put("JAVA_HOME", "/home/ubuntu/graalvm-jdk-24.0.1+9.1");
 
 			final Process p = pb.start();
 
@@ -559,8 +473,6 @@ public class Session {
 					"@" + tempSQLScript.getCanonicalPath())
 					.inheritIO();
 
-			pb.environment().put("JAVA_HOME", "/home/ubuntu/graalvm-jdk-24.0.1+9.1");
-
 			final Process p = pb.start();
 
 			final int returnCode = p.waitFor();
@@ -585,7 +497,9 @@ public class Session {
 			Database database = new JSON<>(Database.class).parse(jsonInformation);
 			database = new JSON<>(Database.class).parse(database.getDatabase());
 
-			final String connectionString = technologyType == TechnologyType.atps ?
+			final String dbType = getInternalTechnologyType(technologyType);
+
+			final String connectionString = dbType.equals(TechnologyType.AUTONOMOUS) ?
 					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
 					:
 					String.format("%s:1521/%s", database.getHost(), database.getService());
@@ -736,7 +650,6 @@ public class Session {
 
 					for (GitHubFilename filename : files.getFiles()) {
 						final String filenameToTest = filename.getFilename();
-						//System.out.println("Testing ["+filenameToTest+"] ...");
 						for (String prefix : prefixes) {
 							if (filenameToTest.startsWith(prefix)) {
 								filesMatchingAnyPrefix++;

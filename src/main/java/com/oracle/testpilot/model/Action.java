@@ -7,10 +7,9 @@
 package com.oracle.testpilot.model;
 
 public enum Action {
-	GET_DATABASE_INFO(""),
-	CREATE_DATABASE("Creating database..."),
+	CREATE("Creating database..."),
 	SKIP_TESTING("Analyzing committed files to skip tests eventually..."),
-	DROP_DATABASE("Dropping database...");
+	DROP("Dropping database...");
 
 	private final String banner;
 

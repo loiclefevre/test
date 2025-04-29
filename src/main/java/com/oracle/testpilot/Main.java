@@ -14,7 +14,7 @@ import java.util.Locale;
  * Oracle Test Pilot services main entry point.
  *
  * @author LLEFEVRE
- * @since 0.0.1
+ * @since 1.0.0
  */
 public class Main {
 
@@ -24,7 +24,7 @@ public class Main {
 		System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
-	public static final String VERSION = "0.0.42";
+	public static final String VERSION = "0.0.43";
 
 	public static void main(final String[] args) {
 		final long startTime = System.currentTimeMillis();
@@ -34,19 +34,18 @@ public class Main {
 
 		try {
 			session = new Session(args);
-			session.banner();
 			session.run();
 		}
 		catch (TestPilotException te) {
 			exitStatus = te.getErrorCode();
 			if (session != null) {
 				switch (session.action) {
-					case CREATE_DATABASE:
-						System.out.printf("Database creation failed (%d)%n", exitStatus);
+					case CREATE:
+						System.out.printf("Provisioning failed (%d)%n", exitStatus);
 						break;
 
-					case DROP_DATABASE:
-						System.out.printf("Database deletion failed (%d)%n", exitStatus);
+					case DROP:
+						System.out.printf("De-provisioning failed (%d)%n", exitStatus);
 						break;
 
 					case SKIP_TESTING:

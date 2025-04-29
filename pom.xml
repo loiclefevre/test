@@ -6,7 +6,7 @@
 
     <groupId>com.oracle.testpilot</groupId>
     <artifactId>testpilot-services</artifactId>
-    <version>0.0.42</version>
+    <version>0.0.43</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
 
@@ -24,6 +24,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc17</artifactId>
+            <version>23.7.0.25.01</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -61,7 +66,6 @@
                             </agent>
                             <buildArgs>
                                 <buildArg>-H:EnableURLProtocols=http,https</buildArg>
-                                <buildArg>-Djdk.internal.httpclient.disableHostnameVerification=true</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>

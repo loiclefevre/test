@@ -6,9 +6,9 @@
  */
 package com.oracle.testpilot.model;
 
-public enum TechnologyType {
-	atps,
-	db19c,
-	db21c,
-	db23ai
+public class TechnologyType {
+	public static final String AUTONOMOUS = "autonomous";
+	public static final String DB19C = "db19c";
+	public static final String DB21C = "db21c";
+	public static final String DB23AI = "db23ai";
 }

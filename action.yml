@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.42'
+    default: 'v0.0.43'
     required: true
   action:
     description: 'The action to run.'
@@ -55,14 +55,23 @@ runs:
         VERSION: ${{ inputs.version }}
       run: ${GITHUB_ACTION_PATH}/setup-test.sh
 
-    - name: 'Run'
+    - name: 'Analyze commit'
       id: run
-      if: inputs. == 'no'
+      if: inputs.action == 'skip-testing'
       shell: bash -leo pipefail {0}
       env:
         RUNID: ${{ github.run_number }}
       run: |
-        ${GITHUB_ACTION_PATH}/setup-testpilot --${{ inputs.service }} \
-        --user "${{ inputs.user }}" --password "${{ inputs.password }}" --type "${{ inputs.type }}" \
+        ${GITHUB_ACTION_PATH}/setup-testpilot --skip-testing \
         --owner "${{ github.repository_owner }}" --repository "${{ github.event.repository.name }}" --sha "${{ github.sha }}" \
         --prefix-list "${{ inputs.prefix_list }}" >> $GITHUB_OUTPUT
+
+    - name: 'Run'
+      id: run
+      if: inputs.action == 'create' || inputs.action == 'drop'
+      shell: bash -leo pipefail {0}
+      env:
+        RUNID: ${{ github.run_number }}
+      run: |
+        ${GITHUB_ACTION_PATH}/setup-testpilot --${{ inputs.action }} \
+        --user "${{ inputs.user }}" --password "${{ inputs.password }}" --oci-service "${{ inputs.oci-service }}" >> $GITHUB_OUTPUT
