@@ -31,7 +31,7 @@ public class TestPilotException extends RuntimeException {
 	public static final int OWNER_MISSING_PARAMETER = 24;
 	public static final int REPOSITORY_MISSING_PARAMETER = 25;
 	public static final int SHA_MISSING_PARAMETER = 26;
-	public static final int WRONG_SQLCL_USAGE = 27;
+	public static final int SQL_ERROR = 27;
 	public static final int SQLCL_INTERRUPTED = 28;
 	public static final int SQLCL_ERROR = 29;
 	public static final int DROP_DATABASE_MISSING_USER_NAME = 32;

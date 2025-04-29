@@ -17,9 +17,7 @@ import com.oracle.testpilot.model.TechnologyType;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +26,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Base64;
 
 import static com.oracle.testpilot.exception.TestPilotException.*;
@@ -54,8 +56,6 @@ public class Session {
 	private String owner;
 	private String repository;
 	private String sha;
-
-	private static final String SQLCL_PATH = "/home/ubuntu/sqlcl/bin/sql";
 
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
@@ -109,7 +109,7 @@ public class Session {
 						try {
 							technologyType = args[++i];
 
-							switch(technologyType) {
+							switch (technologyType) {
 								case "autonomous-transaction-processing-serverless":
 								case "base-database-service-19c":
 								case "base-database-service-21c":
@@ -382,10 +382,7 @@ public class Session {
 
 			final String dbType = getInternalTechnologyType(technologyType);
 
-			final String connectionString = dbType.equals(TechnologyType.AUTONOMOUS) ?
-					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
-					:
-					String.format("%s:1521/%s", database.getHost(), database.getService());
+			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
 
 			System.out.printf("""
 							database_host=%s
@@ -395,56 +392,27 @@ public class Session {
 					database.getHost(), database.getService(), database.getVersion(),
 					connectionString);
 
-			// Create temporary SQL script
-			final File tempSQLScript = File.createTempFile("test", ".sql");
+			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "system", database.getPassword())) {
+				try (Statement s = c.createStatement()) {
+					for (String user : users.split(",")) {
+						if (dbType.equals(TechnologyType.DB23AI)) {
+							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
+							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
+							s.execute(String.format("grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s", user, runID));
+						}
+						else {
+							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
+							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
+							s.execute(String.format("grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s", user, runID));
+						}
+					}
 
-			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
-				for (String user : users.split(",")) {
-					if (dbType.equals(TechnologyType.DB23AI)) {
-						p.println(String.format("""
-										create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
-										alter user %s_%s quota unlimited on users;
-										grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-										""",
-								user, runID, password, user, runID, user, runID));
-					}
-					else {
-						p.println(String.format("""
-										create user %s_%s identified by "%s" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
-										alter user %s_%s quota unlimited on users;
-										grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s;
-										""",
-								user, runID, password, user, runID, user, runID));
-					}
+					System.out.println("create=ok");
 				}
-
-				p.println("\nexit;");
-			}
-
-			final ProcessBuilder pb = new ProcessBuilder(SQLCL_PATH, "-s",
-					String.format("system/%s@%s:1521/%s",
-							database.getPassword(),
-							database.getHost(),
-							database.getService()),
-					"@" + tempSQLScript.getCanonicalPath())
-					.inheritIO();
-
-			final Process p = pb.start();
-
-			final int returnCode = p.waitFor();
-
-			if (returnCode != 0) {
-				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
-			}
-			else {
-				System.out.println("create_database=ok");
 			}
 		}
-		catch (IOException e) {
-			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
-		}
-		catch (InterruptedException e) {
-			throw new TestPilotException(SQLCL_INTERRUPTED);
+		catch (SQLException e) {
+			throw new TestPilotException(SQL_ERROR, e);
 		}
 	}
 
@@ -454,41 +422,21 @@ public class Session {
 			Database database = new JSON<>(Database.class).parse(jsonInformation);
 			database = new JSON<>(Database.class).parse(database.getDatabase());
 
-			// Create temporary SQL script
-			final File tempSQLScript = File.createTempFile("test", ".sql");
+			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
 
-			try (PrintWriter p = new PrintWriter(tempSQLScript)) {
-				for (String user : users.split(",")) {
-					p.println(String.format("drop user %s_%s cascade;",
-							user, runID));
+			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "system", database.getPassword())) {
+				try (Statement s = c.createStatement()) {
+					for (String user : users.split(",")) {
+						s.execute(String.format("drop user %s_%s cascade;",
+								user, runID));
+					}
+
+					System.out.println("drop=ok");
 				}
-				p.print("\nexit;");
-			}
-
-			final ProcessBuilder pb = new ProcessBuilder(SQLCL_PATH, "-s",
-					String.format("system/%s@%s:1521/%s",
-							database.getPassword(),
-							database.getHost(),
-							database.getService()),
-					"@" + tempSQLScript.getCanonicalPath())
-					.inheritIO();
-
-			final Process p = pb.start();
-
-			final int returnCode = p.waitFor();
-
-			if (returnCode != 0) {
-				throw new TestPilotException(SQLCL_ERROR, new RuntimeException("SQLcl exited with error code " + returnCode));
-			}
-			else {
-				System.out.println("drop_database=ok");
 			}
 		}
-		catch (IOException e) {
-			throw new TestPilotException(WRONG_SQLCL_USAGE, e);
-		}
-		catch (InterruptedException e) {
-			throw new TestPilotException(SQLCL_INTERRUPTED);
+		catch (SQLException e) {
+			throw new TestPilotException(SQL_ERROR, e);
 		}
 	}
 
@@ -545,7 +493,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					System.out.println("create_database=ok");
+					System.out.println("create=ok");
 				}
 				else {
 					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
@@ -592,7 +540,7 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					System.out.println("drop_database=ok");
+					System.out.println("drop=ok");
 				}
 				else {
 					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
