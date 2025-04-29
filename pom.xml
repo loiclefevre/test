@@ -6,7 +6,7 @@
 
     <groupId>com.oracle.testpilot</groupId>
     <artifactId>testpilot-services</artifactId>
-    <version>0.0.43</version>
+    <version>0.0.44</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
 
@@ -66,6 +66,25 @@
                             </agent>
                             <buildArgs>
                                 <buildArg>-H:EnableURLProtocols=http,https</buildArg>
+
+                                <buildArg>--no-fallback</buildArg>
+                                <buildArg>-H:+ReportExceptionStackTraces</buildArg>
+                                <buildArg>-H:+AddAllCharsets</buildArg>
+                                <buildArg>-Doracle.jdbc.fanEnabled=false</buildArg>
+
+                                <buildArg>--report-unsupported-elements-at-runtime</buildArg>
+                                <buildArg>--enable-all-security-services</buildArg>
+                                <buildArg>-H:ConfigurationFileDirectories=../src/main/resources/META-INF/native-image</buildArg>
+                                <buildArg>-H:-CheckToolchain</buildArg>
+                                <!-- buildArg>- -initialize-at-build-time=sun.instrument.InstrumentationImpl</buildArg -->
+
+                                <buildArg>--features=oracle.nativeimage.CharacterSetFeature</buildArg>
+                                <buildArg>--features=oracle.nativeimage.NativeImageFeature</buildArg>
+                                <buildArg>--trace-class-initialization=oracle.sql.CharacterSet</buildArg>
+                                <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet</buildArg>
+                                <buildArg>--initialize-at-build-time=oracle.sql.ConverterArchive</buildArg>
+                                <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet$CharacterSetNamesMapHolder</buildArg>
+                                <buildArg>--initialize-at-build-time=oracle.net.jdbc.nl.mesg.NLSR</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
