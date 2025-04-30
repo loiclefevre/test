@@ -398,12 +398,12 @@ public class Session {
 						if (dbType.equals(TechnologyType.DB23AI)) {
 							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
 							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
-							s.execute(String.format("grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s", user, runID));
+							s.execute(String.format("grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s", user, runID));
 						}
 						else {
 							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
 							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
-							s.execute(String.format("grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s", user, runID));
+							s.execute(String.format("grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s", user, runID));
 						}
 					}
 
@@ -468,7 +468,7 @@ public class Session {
 				sql.append(String.format("""
 						create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
 						alter user %s_%s quota unlimited on data;
-						grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
+						grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
 						\n""", user, runID, password, user, runID, user, runID));
 			}
 

@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.48'
+    default: 'v0.0.49'
     required: true
   action:
     description: 'The action to run.'
