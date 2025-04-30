@@ -288,7 +288,7 @@ public class Session {
 						createDatabaseWithORDS(response.body());
 					}
 					else {
-						createDatabaseWithSQLcl(response.body());
+						createDatabaseWithSQL(response.body());
 					}
 				}
 				else {
@@ -353,7 +353,7 @@ public class Session {
 						dropDatabaseWithORDS(response.body());
 					}
 					else {
-						dropDatabaseWithSQLcl(response.body());
+						dropDatabaseWithSQL(response.body());
 					}
 				}
 				else {
@@ -375,7 +375,7 @@ public class Session {
 	}
 
 	// For Base DB Systems
-	private void createDatabaseWithSQLcl(final String jsonInformation) {
+	private void createDatabaseWithSQL(final String jsonInformation) {
 		try {
 			Database database = new JSON<>(Database.class).parse(jsonInformation);
 			database = new JSON<>(Database.class).parse(database.getDatabase());
@@ -392,7 +392,7 @@ public class Session {
 					database.getHost(), database.getService(), database.getVersion(),
 					connectionString);
 
-			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "system", database.getPassword())) {
+			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
 				try (Statement s = c.createStatement()) {
 					for (String user : users.split(",")) {
 						if (dbType.equals(TechnologyType.DB23AI)) {
@@ -417,14 +417,14 @@ public class Session {
 	}
 
 	// For Base DB Systems
-	private void dropDatabaseWithSQLcl(final String jsonInformation) {
+	private void dropDatabaseWithSQL(final String jsonInformation) {
 		try {
 			Database database = new JSON<>(Database.class).parse(jsonInformation);
 			database = new JSON<>(Database.class).parse(database.getDatabase());
 
 			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
 
-			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "system", database.getPassword())) {
+			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
 				try (Statement s = c.createStatement()) {
 					for (String user : users.split(",")) {
 						s.execute(String.format("drop user %s_%s cascade;",
