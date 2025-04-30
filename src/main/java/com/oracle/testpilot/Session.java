@@ -427,7 +427,7 @@ public class Session {
 			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
 				try (Statement s = c.createStatement()) {
 					for (String user : users.split(",")) {
-						s.execute(String.format("drop user %s_%s cascade;",
+						s.execute(String.format("drop user %s_%s cascade",
 								user, runID));
 					}
 
