@@ -275,7 +275,7 @@ public class Session {
 
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					.sslContext(sslContext)
+					//.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -340,7 +340,7 @@ public class Session {
 
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					.sslContext(sslContext)
+					//.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
