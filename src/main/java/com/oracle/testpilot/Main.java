@@ -24,6 +24,8 @@ public class Main {
 		System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
+	public static final String VERSION="0.0.52";
+
 	public static void main(final String[] args) {
 		int exitStatus = 0;
 

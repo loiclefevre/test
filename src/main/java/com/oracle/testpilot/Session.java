@@ -267,7 +267,8 @@ public class Session {
 					.uri(new URI(uri))
 					.headers("Accept", "application/json",
 							"Pragma", "no-cache",
-							"Cache-Control", "no-store")
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/"+Main.VERSION)
 					.GET()
 					.build();
 
@@ -275,7 +276,7 @@ public class Session {
 
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					//.sslContext(sslContext)
+					.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -332,7 +333,8 @@ public class Session {
 					.uri(new URI(uri))
 					.headers("Accept", "application/json",
 							"Pragma", "no-cache",
-							"Cache-Control", "no-store")
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/"+Main.VERSION)
 					.GET()
 					.build();
 
@@ -340,7 +342,7 @@ public class Session {
 
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					//.sslContext(sslContext)
+					.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -478,7 +480,8 @@ public class Session {
 							"Content-Type", "application/sql",
 							"Authorization", basicAuth("admin", database.getPassword()),
 							"Pragma", "no-cache",
-							"Cache-Control", "no-store")
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/"+Main.VERSION)
 					// WE EXPECT ATP-S 23ai
 					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
 					.build();
@@ -525,7 +528,8 @@ public class Session {
 							"Content-Type", "application/sql",
 							"Authorization", basicAuth("admin", database.getPassword()),
 							"Pragma", "no-cache",
-							"Cache-Control", "no-store")
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/"+Main.VERSION)
 					// WE EXPECT ATP-S 23ai
 					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
 					.build();
@@ -574,7 +578,8 @@ public class Session {
 					.uri(new URI(uri))
 					.headers("Accept", "application/vnd.github+json",
 							"Pragma", "no-cache",
-							"Cache-Control", "no-store")
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/"+Main.VERSION)
 					.GET()
 					.build();
 

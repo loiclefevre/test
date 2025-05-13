@@ -6,7 +6,7 @@
 
     <groupId>com.oracle.testpilot</groupId>
     <artifactId>testpilot-services</artifactId>
-    <version>0.0.51</version>
+    <version>0.0.52</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
 
