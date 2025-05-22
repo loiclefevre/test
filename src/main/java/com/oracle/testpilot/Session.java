@@ -61,7 +61,7 @@ public class Session {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
 		if (apiHOST == null) {
-			apiHOST = "api.testpilot-controller.oraclecloud.com";
+			apiHOST = "api-testpilot-controller.oraclecorp.com";
 		}
 		analyzeCommandLineParameters(args);
 	}
@@ -222,30 +222,30 @@ public class Session {
 		}
 	}
 
-	private static SSLContext createCustomSSLContext() {
-		final TrustManager[] trustAllCerts = new TrustManager[]{
-				new X509TrustManager() {
-					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-						return new java.security.cert.X509Certificate[0];
-					}
-
-					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-					}
-
-					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-					}
-				}
-		};
-
-		try {
-			final SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-			return sslContext;
-		}
-		catch (NoSuchAlgorithmException | KeyManagementException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
-		}
-	}
+//	private static SSLContext createCustomSSLContext() {
+//		final TrustManager[] trustAllCerts = new TrustManager[]{
+//				new X509TrustManager() {
+//					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+//						return new java.security.cert.X509Certificate[0];
+//					}
+//
+//					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+//					}
+//
+//					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+//					}
+//				}
+//		};
+//
+//		try {
+//			final SSLContext sslContext = SSLContext.getInstance("TLS");
+//			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+//			return sslContext;
+//		}
+//		catch (NoSuchAlgorithmException | KeyManagementException e) {
+//			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+//		}
+//	}
 
 	private void createDatabase() {
 		if (users == null || users.isEmpty()) {
@@ -272,11 +272,11 @@ public class Session {
 					.GET()
 					.build();
 
-			final SSLContext sslContext = createCustomSSLContext();
+			//final SSLContext sslContext = createCustomSSLContext();
 
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					.sslContext(sslContext)
+					//.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -338,11 +338,11 @@ public class Session {
 					.GET()
 					.build();
 
-			final SSLContext sslContext = createCustomSSLContext();
+			//final SSLContext sslContext = createCustomSSLContext();
 
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					.sslContext(sslContext)
+					//.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)

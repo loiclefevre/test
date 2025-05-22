@@ -21,10 +21,10 @@ public class Main {
 	static {
 		Locale.setDefault(Locale.US);
 		System.setProperty("java.net.useSystemProxies", "true");
-		System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
+		//System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
-	public static final String VERSION="0.0.52";
+	public static final String VERSION="0.0.53";
 
 	public static void main(final String[] args) {
 		int exitStatus = 0;
