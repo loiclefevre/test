@@ -299,7 +299,8 @@ public class Session {
 				}
 				else {
 					throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+							new IllegalStateException("HTTP/S status code: " + response.statusCode(),
+									new IllegalStateException(response.body())));
 				}
 			}
 		}
