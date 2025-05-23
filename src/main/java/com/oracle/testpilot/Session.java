@@ -272,7 +272,7 @@ public class Session {
 											database_host=%s
 											database_service=%s
 											database_version=%s
-											connection_string_suffix="%s\"""",
+											connection_string_suffix="%s"%n""",
 									database.getHost(), database.getService(), database.getVersion(),
 									connectionString);
 						}
@@ -289,7 +289,7 @@ public class Session {
 											database_host=%s
 											database_service=%s
 											database_version=%s
-											connection_string_suffix="%s\"""",
+											connection_string_suffix="%s"%n""",
 									database.getHost(), database.getService(), database.getVersion(), connectionString);
 						}
 						break;
