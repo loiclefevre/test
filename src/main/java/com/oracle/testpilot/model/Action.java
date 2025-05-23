@@ -7,9 +7,9 @@
 package com.oracle.testpilot.model;
 
 public enum Action {
-	CREATE("Creating database..."),
+	CREATE("Creating OCI resource..."),
 	SKIP_TESTING("Analyzing committed files to skip tests eventually..."),
-	DROP("Dropping database...");
+	DELETE("Deleting OCI resource...");
 
 	private final String banner;
 

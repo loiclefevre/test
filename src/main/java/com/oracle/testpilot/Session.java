@@ -14,9 +14,6 @@ import com.oracle.testpilot.model.GitHubCommittedFiles;
 import com.oracle.testpilot.model.GitHubFilename;
 import com.oracle.testpilot.model.TechnologyType;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.ProxySelector;
 import java.net.URI;
@@ -24,8 +21,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -60,9 +55,9 @@ public class Session {
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
-		if (apiHOST == null) {
-			apiHOST = "api-testpilot-controller.oraclecorp.com";
-		}
+//		if (apiHOST == null) {
+//			apiHOST = "api-testpilot-controller.oraclecorp.com";
+//		}
 		analyzeCommandLineParameters(args);
 	}
 
@@ -82,8 +77,8 @@ public class Session {
 					action = CREATE;
 					break;
 
-				case "--drop":
-					action = DROP;
+				case "--delete":
+					action = DELETE;
 					break;
 
 				case "--user":
@@ -188,7 +183,7 @@ public class Session {
 				    --oci-service <value>      OCI service type (autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, base-database-service-23ai)
 				    --user <user>              user name to be used (if several, then comma separated list without any space)
 				    --password <password>      password to be used (if several users, they will have the same password)
-				--drop: to de-provision the Oracle Cloud Infrastructure service
+				--delete: to de-provision the Oracle Cloud Infrastructure service
 				    Options:
 				    --oci-service <value>      OCI service type (autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, base-database-service-23ai)
 				    --user <user>              user name to be used (if several, then comma separated list without any space)
@@ -206,46 +201,185 @@ public class Session {
 
 		switch (action) {
 			case CREATE:
-				//System.out.printf("%s%n", action.getBanner());
-				createDatabase();
+				create();
 				break;
 
-			case DROP:
-				//System.out.printf("%s%n", action.getBanner());
-				dropDatabase();
+			case DELETE:
+				delete();
 				break;
 
 			case SKIP_TESTING:
-				//System.out.printf("%s%n", action.getBanner());
 				skipTesting();
 				break;
 		}
 	}
 
-//	private static SSLContext createCustomSSLContext() {
-//		final TrustManager[] trustAllCerts = new TrustManager[]{
-//				new X509TrustManager() {
-//					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-//						return new java.security.cert.X509Certificate[0];
-//					}
-//
-//					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-//					}
-//
-//					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-//					}
-//				}
-//		};
-//
-//		try {
-//			final SSLContext sslContext = SSLContext.getInstance("TLS");
-//			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-//			return sslContext;
-//		}
-//		catch (NoSuchAlgorithmException | KeyManagementException e) {
-//			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
-//		}
-//	}
+	private void create() {
+		if (users == null || users.isEmpty()) {
+			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
+		}
+		if (password == null || password.isEmpty()) {
+			throw new TestPilotException(CREATE_DATABASE_MISSING_PASSWORD);
+		}
+		if (technologyType == null) {
+			throw new TestPilotException(CREATE_DATABASE_MISSING_DB_TYPE);
+		}
+
+		try {
+			final String type = getInternalTechnologyType(technologyType);
+
+			final String uri = String.format("https://%s/ords/testpilot/resources/create", apiHOST);
+
+			final HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI(uri))
+					.headers("Accept", "application/json",
+							"Content-Type", "application/json",
+							"Pragma", "no-cache",
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
+					.POST(HttpRequest.BodyPublishers.ofString(
+							String.format("""
+									{
+									     "runID": "%s",
+									     "type": "%s",
+									     "user": [%s],
+									     "password": "%s"
+									}""", runID, type, buildUserList(users), password)
+					))
+					.build();
+
+			try (HttpClient client = HttpClient
+					.newBuilder()
+					.version(HttpClient.Version.HTTP_1_1)
+					.proxy(ProxySelector.getDefault())
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.build()) {
+
+				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+				if (response.statusCode() == 200) {
+					// retrieve JSON response
+					final String jsonInformation = response.body();
+
+					switch (type) {
+						case TechnologyType.AUTONOMOUS: {
+							Database database = new JSON<>(Database.class).parse(jsonInformation);
+							database = new JSON<>(Database.class).parse(database.getDatabase());
+
+							final String connectionString = String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService());
+
+							System.out.printf("""
+											database_host=%s
+											database_service=%s
+											database_version=%s
+											connection_string_suffix="%s\"""",
+									database.getHost(), database.getService(), database.getVersion(),
+									connectionString);
+						}
+						break;
+						case TechnologyType.DB19C:
+						case TechnologyType.DB21C:
+						case TechnologyType.DB23AI: {
+							Database database = new JSON<>(Database.class).parse(jsonInformation);
+							database = new JSON<>(Database.class).parse(database.getDatabase());
+
+							final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
+
+							System.out.printf("""
+											database_host=%s
+											database_service=%s
+											database_version=%s
+											connection_string_suffix="%s\"""",
+									database.getHost(), database.getService(), database.getVersion(), connectionString);
+						}
+						break;
+					}
+
+					System.out.println("create=ok");
+				}
+				else {
+					throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
+							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+				}
+			}
+		}
+		catch (URISyntaxException e) {
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
+		}
+		catch (IOException | InterruptedException e) {
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+		}
+	}
+
+	private void delete() {
+		if (users == null || users.isEmpty()) {
+			throw new TestPilotException(DROP_DATABASE_MISSING_USER_NAME);
+		}
+		if (technologyType == null) {
+			throw new TestPilotException(DROP_DATABASE_MISSING_DB_TYPE);
+		}
+
+		try {
+			final String type = getInternalTechnologyType(technologyType);
+
+			final String uri = String.format("https://%s/ords/testpilot/resources/delete", apiHOST);
+
+			final HttpRequest request = HttpRequest.newBuilder()
+					.uri(new URI(uri))
+					.headers("Accept", "application/json",
+							"Content-Type", "application/json",
+							"Pragma", "no-cache",
+							"Cache-Control", "no-store",
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
+					.POST(HttpRequest.BodyPublishers.ofString(
+							String.format("""
+									{
+									     "runID": "%s",
+									     "type": "%s",
+									     "user": [%s]
+									}""", runID, type, buildUserList(users))
+					))
+					.build();
+
+			try (HttpClient client = HttpClient
+					.newBuilder()
+					.version(HttpClient.Version.HTTP_1_1)
+					.proxy(ProxySelector.getDefault())
+					.followRedirects(HttpClient.Redirect.NORMAL)
+					.build()) {
+
+				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+				if (response.statusCode() == 200) {
+					System.out.println("delete=ok");
+				}
+				else {
+					throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
+							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+				}
+			}
+		}
+		catch (URISyntaxException e) {
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
+		}
+		catch (IOException | InterruptedException e) {
+			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+		}
+	}
+
+	private String buildUserList(final String users) {
+		final StringBuilder sb = new StringBuilder();
+		int i = 0;
+		for (String user : users.split(",")) {
+			if (i > 0) {
+				sb.append(',');
+			}
+			sb.append("\"").append(user).append("\"");
+			i++;
+		}
+
+		return sb.toString();
+	}
 
 	private void createDatabase() {
 		if (users == null || users.isEmpty()) {
@@ -268,15 +402,12 @@ public class Session {
 					.headers("Accept", "application/json",
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/"+Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
 					.GET()
 					.build();
 
-			//final SSLContext sslContext = createCustomSSLContext();
-
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					//.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -334,15 +465,12 @@ public class Session {
 					.headers("Accept", "application/json",
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/"+Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
 					.GET()
 					.build();
 
-			//final SSLContext sslContext = createCustomSSLContext();
-
 			try (HttpClient client = HttpClient
 					.newBuilder()
-					//.sslContext(sslContext)
 					.version(HttpClient.Version.HTTP_1_1)
 					.proxy(ProxySelector.getDefault())
 					.followRedirects(HttpClient.Redirect.NORMAL)
@@ -481,7 +609,7 @@ public class Session {
 							"Authorization", basicAuth("admin", database.getPassword()),
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/"+Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
 					// WE EXPECT ATP-S 23ai
 					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
 					.build();
@@ -529,7 +657,7 @@ public class Session {
 							"Authorization", basicAuth("admin", database.getPassword()),
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/"+Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
 					// WE EXPECT ATP-S 23ai
 					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
 					.build();
@@ -557,6 +685,12 @@ public class Session {
 		}
 	}
 
+	/**
+	 * Analyze the list of files present inside the commit and compare it
+	 * with a list of files and folder prefixes that must not trigger any
+	 * build and test (example: documentation). In that case, the response
+	 * is clear: no need to build.
+	 */
 	private void skipTesting() {
 		if (owner == null || owner.isEmpty()) {
 			throw new TestPilotException(SKIP_TESTING_MISSING_OWNER);
@@ -579,7 +713,7 @@ public class Session {
 					.headers("Accept", "application/vnd.github+json",
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/"+Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION)
 					.GET()
 					.build();
 

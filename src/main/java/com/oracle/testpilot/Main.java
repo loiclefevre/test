@@ -11,7 +11,7 @@ import com.oracle.testpilot.exception.TestPilotException;
 import java.util.Locale;
 
 /**
- * Oracle Test Pilot services main entry point.
+ * Test services main entry point.
  *
  * @author LLEFEVRE
  * @since 1.0.0
@@ -21,10 +21,9 @@ public class Main {
 	static {
 		Locale.setDefault(Locale.US);
 		System.setProperty("java.net.useSystemProxies", "true");
-		//System.setProperty("jdk.internal.httpclient.disableHostnameVerification", "true");
 	}
 
-	public static final String VERSION="0.0.53";
+	public static final String VERSION="0.0.54";
 
 	public static void main(final String[] args) {
 		int exitStatus = 0;
@@ -43,7 +42,7 @@ public class Main {
 						System.out.printf("Provisioning failed (%d)%n", exitStatus);
 						break;
 
-					case DROP:
+					case DELETE:
 						System.out.printf("De-provisioning failed (%d)%n", exitStatus);
 						break;
 

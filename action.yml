@@ -9,10 +9,10 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.53'
+    default: 'v0.0.54'
     required: true
   action:
-    description: 'The action to run.'
+    description: 'The action to run (create*, delete, skip-testing).'
     default: 'create'
     required: true
   oci-service:
@@ -66,9 +66,9 @@ runs:
         --owner "${{ github.repository_owner }}" --repository "${{ github.event.repository.name }}" --sha "${{ github.sha }}" \
         --prefix-list "${{ inputs.prefix_list }}" >> $GITHUB_OUTPUT
 
-    - name: 'Create or Drop'
-      id: create_or_drop
-      if: inputs.action == 'create' || inputs.action == 'drop'
+    - name: 'Create or Delete'
+      id: create_or_delete
+      if: inputs.action == 'create' || inputs.action == 'delete'
       shell: bash -leo pipefail {0}
       env:
         RUNID: ${{ github.run_number }}

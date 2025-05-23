@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v0.0.53
+:project-tag:   v0.0.54
 
 ifdef::env-github[]
 :tip-caption: :bulb:
@@ -19,7 +19,7 @@ Sets up link:https://www.oracle.com/database/[Test].
 This GitHub Action helps the integration of Test within your GitHub Action workflows. It provides several `actions`:
 
 - `create`: used to request the provisioning of the OCI service to test
-- `drop`: used to de-provision the OCI service tested
+- `delete`: used to de-provision the OCI service tested
 - `skip-testing`: used to check if this GitHub commit should not perform any non-regression test, for example if changes involve files or folders that do not contain source code. By using the output of this action, numerous GitHub Action workflows can see their runtime durations drastically reduced.
 
 Supported platforms:
@@ -33,7 +33,7 @@ Following inputs may be used as `step.with` keys:
 [%header,cols="<2,<,<,<3",width="100%"]
 |===
 | Name     | Required | Default         | Description
-| action  | Yes      | create | A valid action among: `create`, `drop`, `skip-testing`.
+| action  | Yes      | create | A valid action among: `create`, `delete`, `skip-testing`.
 | oci-service |          | autonomous-transaction-processing-serverless            | A valid Oracle Cloud Infrastructure service to be tested.
 Valid OCI service are: `autonomous-transaction-processing-serverless`, `base-database-service-19c`, `base-database-service-21c`, and `base-database-service-23ai`.
 | user     |          |                 | The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space).
@@ -95,7 +95,7 @@ jobs:
         if: steps.build_guard.outputs.skip_tests == 'no'
         with:
           oci-service: base-database-service-23ai
-          action: drop
+          action: delete
           user: test
 
 ----
