@@ -41,7 +41,8 @@ public class Session {
 	public Action action;
 
 	private final String runID;
-	private String apiHOST;
+	private final String apiHOST;
+	private final String token;
 
 	private String users;
 	private String password;
@@ -55,9 +56,7 @@ public class Session {
 	public Session(final String[] args) {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
-//		if (apiHOST == null) {
-//			apiHOST = "api-testpilot-controller.oraclecorp.com";
-//		}
+		token = System.getenv("TESTPILOT_TOKEN");
 		analyzeCommandLineParameters(args);
 	}
 
@@ -257,7 +256,7 @@ public class Session {
 
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-				if (response.statusCode() == 200) {
+				if (response.statusCode() == 200 || response.statusCode() == 201) {
 					// retrieve JSON response
 					final String jsonInformation = response.body();
 
@@ -351,7 +350,7 @@ public class Session {
 
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-				if (response.statusCode() == 200) {
+				if (response.statusCode() == 200 || response.statusCode() == 204) {
 					System.out.println("delete=ok");
 				}
 				else {
@@ -382,61 +381,61 @@ public class Session {
 		return sb.toString();
 	}
 
-	private void createDatabase() {
-		if (users == null || users.isEmpty()) {
-			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
-		}
-		if (password == null || password.isEmpty()) {
-			throw new TestPilotException(CREATE_DATABASE_MISSING_PASSWORD);
-		}
-		if (technologyType == null) {
-			throw new TestPilotException(CREATE_DATABASE_MISSING_DB_TYPE);
-		}
-
-		try {
-			final String dbType = getInternalTechnologyType(technologyType);
-
-			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
-
-			final HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(uri))
-					.headers("Accept", "application/json",
-							"Pragma", "no-cache",
-							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION)
-					.GET()
-					.build();
-
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
-
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-				if (response.statusCode() == 200) {
-					if (dbType.equals(TechnologyType.AUTONOMOUS)) {
-						createDatabaseWithORDS(response.body());
-					}
-					else {
-						createDatabaseWithSQL(response.body());
-					}
-				}
-				else {
-					throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
-				}
-			}
-		}
-		catch (URISyntaxException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
-		}
-		catch (IOException | InterruptedException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
-		}
-	}
+//	private void createDatabase() {
+//		if (users == null || users.isEmpty()) {
+//			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
+//		}
+//		if (password == null || password.isEmpty()) {
+//			throw new TestPilotException(CREATE_DATABASE_MISSING_PASSWORD);
+//		}
+//		if (technologyType == null) {
+//			throw new TestPilotException(CREATE_DATABASE_MISSING_DB_TYPE);
+//		}
+//
+//		try {
+//			final String dbType = getInternalTechnologyType(technologyType);
+//
+//			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
+//
+//			final HttpRequest request = HttpRequest.newBuilder()
+//					.uri(new URI(uri))
+//					.headers("Accept", "application/json",
+//							"Pragma", "no-cache",
+//							"Cache-Control", "no-store",
+//							"User-Agent", "setup-testpilot/" + Main.VERSION)
+//					.GET()
+//					.build();
+//
+//			try (HttpClient client = HttpClient
+//					.newBuilder()
+//					.version(HttpClient.Version.HTTP_1_1)
+//					.proxy(ProxySelector.getDefault())
+//					.followRedirects(HttpClient.Redirect.NORMAL)
+//					.build()) {
+//
+//				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//				if (response.statusCode() == 200) {
+//					if (dbType.equals(TechnologyType.AUTONOMOUS)) {
+//						createDatabaseWithORDS(response.body());
+//					}
+//					else {
+//						createDatabaseWithSQL(response.body());
+//					}
+//				}
+//				else {
+//					throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
+//							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+//				}
+//			}
+//		}
+//		catch (URISyntaxException e) {
+//			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
+//		}
+//		catch (IOException | InterruptedException e) {
+//			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+//		}
+//	}
 
 	private String getInternalTechnologyType(String technologyType) {
 		return switch (technologyType) {
@@ -448,243 +447,243 @@ public class Session {
 		};
 	}
 
-	private void dropDatabase() {
-		if (users == null || users.isEmpty()) {
-			throw new TestPilotException(DROP_DATABASE_MISSING_USER_NAME);
-		}
-		if (technologyType == null) {
-			throw new TestPilotException(DROP_DATABASE_MISSING_DB_TYPE);
-		}
+//	private void dropDatabase() {
+//		if (users == null || users.isEmpty()) {
+//			throw new TestPilotException(DROP_DATABASE_MISSING_USER_NAME);
+//		}
+//		if (technologyType == null) {
+//			throw new TestPilotException(DROP_DATABASE_MISSING_DB_TYPE);
+//		}
+//
+//		try {
+//			final String dbType = getInternalTechnologyType(technologyType);
+//
+//			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
+//
+//			final HttpRequest request = HttpRequest.newBuilder()
+//					.uri(new URI(uri))
+//					.headers("Accept", "application/json",
+//							"Pragma", "no-cache",
+//							"Cache-Control", "no-store",
+//							"User-Agent", "setup-testpilot/" + Main.VERSION)
+//					.GET()
+//					.build();
+//
+//			try (HttpClient client = HttpClient
+//					.newBuilder()
+//					.version(HttpClient.Version.HTTP_1_1)
+//					.proxy(ProxySelector.getDefault())
+//					.followRedirects(HttpClient.Redirect.NORMAL)
+//					.build()) {
+//
+//				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//				if (response.statusCode() == 200) {
+//					if (dbType.equals(TechnologyType.AUTONOMOUS)) {
+//						dropDatabaseWithORDS(response.body());
+//					}
+//					else {
+//						dropDatabaseWithSQL(response.body());
+//					}
+//				}
+//				else {
+//					throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
+//							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+//				}
+//			}
+//		}
+//		catch (URISyntaxException e) {
+//			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
+//		}
+//		catch (IOException | InterruptedException e) {
+//			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+//		}
+//	}
 
-		try {
-			final String dbType = getInternalTechnologyType(technologyType);
-
-			final String uri = String.format("https://%s/ords/testpilot/admin/database?type=%s", apiHOST, dbType);
-
-			final HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(uri))
-					.headers("Accept", "application/json",
-							"Pragma", "no-cache",
-							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION)
-					.GET()
-					.build();
-
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
-
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-				if (response.statusCode() == 200) {
-					if (dbType.equals(TechnologyType.AUTONOMOUS)) {
-						dropDatabaseWithORDS(response.body());
-					}
-					else {
-						dropDatabaseWithSQL(response.body());
-					}
-				}
-				else {
-					throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
-				}
-			}
-		}
-		catch (URISyntaxException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
-		}
-		catch (IOException | InterruptedException e) {
-			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
-		}
-	}
-
-	private String basicAuth(final String user, final String password) {
-		return String.format("Basic %s", Base64.getEncoder().encodeToString((String.format("%s:%s", user, password)).getBytes()));
-	}
-
-	// For Base DB Systems
-	private void createDatabaseWithSQL(final String jsonInformation) {
-		try {
-			Database database = new JSON<>(Database.class).parse(jsonInformation);
-			database = new JSON<>(Database.class).parse(database.getDatabase());
-
-			final String dbType = getInternalTechnologyType(technologyType);
-
-			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
-
-			System.out.printf("""
-							database_host=%s
-							database_service=%s
-							database_version=%s
-							connection_string_suffix="%s\"""",
-					database.getHost(), database.getService(), database.getVersion(),
-					connectionString);
-
-			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
-				try (Statement s = c.createStatement()) {
-					for (String user : users.split(",")) {
-						if (dbType.equals(TechnologyType.DB23AI)) {
-							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
-							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
-							s.execute(String.format("grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s", user, runID));
-						}
-						else {
-							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
-							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
-							s.execute(String.format("grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s", user, runID));
-						}
-					}
-
-					System.out.println("create=ok");
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw new TestPilotException(SQL_ERROR, e);
-		}
-	}
+//	private String basicAuth(final String user, final String password) {
+//		return String.format("Basic %s", Base64.getEncoder().encodeToString((String.format("%s:%s", user, password)).getBytes()));
+//	}
 
 	// For Base DB Systems
-	private void dropDatabaseWithSQL(final String jsonInformation) {
-		try {
-			Database database = new JSON<>(Database.class).parse(jsonInformation);
-			database = new JSON<>(Database.class).parse(database.getDatabase());
+//	private void createDatabaseWithSQL(final String jsonInformation) {
+//		try {
+//			Database database = new JSON<>(Database.class).parse(jsonInformation);
+//			database = new JSON<>(Database.class).parse(database.getDatabase());
+//
+//			final String dbType = getInternalTechnologyType(technologyType);
+//
+//			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
+//
+//			System.out.printf("""
+//							database_host=%s
+//							database_service=%s
+//							database_version=%s
+//							connection_string_suffix="%s\"""",
+//					database.getHost(), database.getService(), database.getVersion(),
+//					connectionString);
+//
+//			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
+//				try (Statement s = c.createStatement()) {
+//					for (String user : users.split(",")) {
+//						if (dbType.equals(TechnologyType.DB23AI)) {
+//							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
+//							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
+//							s.execute(String.format("grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s", user, runID));
+//						}
+//						else {
+//							s.execute(String.format("create user %s_%s identified by \"%s\" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP", user, runID, password));
+//							s.execute(String.format("alter user %s_%s quota unlimited on users", user, runID));
+//							s.execute(String.format("grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to %s_%s", user, runID));
+//						}
+//					}
+//
+//					System.out.println("create=ok");
+//				}
+//			}
+//		}
+//		catch (SQLException e) {
+//			throw new TestPilotException(SQL_ERROR, e);
+//		}
+//	}
 
-			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
+	// For Base DB Systems
+//	private void dropDatabaseWithSQL(final String jsonInformation) {
+//		try {
+//			Database database = new JSON<>(Database.class).parse(jsonInformation);
+//			database = new JSON<>(Database.class).parse(database.getDatabase());
+//
+//			final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
+//
+//			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
+//				try (Statement s = c.createStatement()) {
+//					for (String user : users.split(",")) {
+//						s.execute(String.format("drop user %s_%s cascade",
+//								user, runID));
+//					}
+//
+//					System.out.println("drop=ok");
+//				}
+//			}
+//		}
+//		catch (SQLException e) {
+//			throw new TestPilotException(SQL_ERROR, e);
+//		}
+//	}
 
-			try (Connection c = DriverManager.getConnection("jdbc:oracle:thin:@" + connectionString, "pdbuser", database.getPassword())) {
-				try (Statement s = c.createStatement()) {
-					for (String user : users.split(",")) {
-						s.execute(String.format("drop user %s_%s cascade",
-								user, runID));
-					}
+//	private void createDatabaseWithORDS(final String jsonInformation) {
+//		try {
+//			Database database = new JSON<>(Database.class).parse(jsonInformation);
+//			database = new JSON<>(Database.class).parse(database.getDatabase());
+//
+//			final String dbType = getInternalTechnologyType(technologyType);
+//
+//			final String connectionString = dbType.equals(TechnologyType.AUTONOMOUS) ?
+//					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
+//					:
+//					String.format("%s:1521/%s", database.getHost(), database.getService());
+//
+//			System.out.printf("""
+//							database_host=%s
+//							database_service=%s
+//							database_version=%s
+//							connection_string_suffix="%s\"""",
+//					database.getHost(), database.getService(), database.getVersion(),
+//					connectionString);
+//
+//			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
+//
+//			final StringBuilder sql = new StringBuilder();
+//
+//			for (String user : users.split(",")) {
+//				sql.append(String.format("""
+//						create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
+//						alter user %s_%s quota unlimited on data;
+//						grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
+//						\n""", user, runID, password, user, runID, user, runID));
+//			}
+//
+//			final HttpRequest request = HttpRequest.newBuilder()
+//					.uri(new URI(uri))
+//					.headers("Accept", "application/json",
+//							"Content-Type", "application/sql",
+//							"Authorization", basicAuth("admin", database.getPassword()),
+//							"Pragma", "no-cache",
+//							"Cache-Control", "no-store",
+//							"User-Agent", "setup-testpilot/" + Main.VERSION)
+//					// WE EXPECT ATP-S 23ai
+//					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
+//					.build();
+//
+//			try (HttpClient client = HttpClient
+//					.newBuilder()
+//					.version(HttpClient.Version.HTTP_1_1)
+//					.proxy(ProxySelector.getDefault())
+//					.followRedirects(HttpClient.Redirect.NORMAL)
+//					.build()) {
+//
+//				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//				if (response.statusCode() == 200) {
+//					System.out.println("create=ok");
+//				}
+//				else {
+//					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
+//							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+//				}
+//			}
+//		}
+//		catch (URISyntaxException | IOException | InterruptedException e) {
+//			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
+//		}
+//	}
 
-					System.out.println("drop=ok");
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw new TestPilotException(SQL_ERROR, e);
-		}
-	}
-
-	private void createDatabaseWithORDS(final String jsonInformation) {
-		try {
-			Database database = new JSON<>(Database.class).parse(jsonInformation);
-			database = new JSON<>(Database.class).parse(database.getDatabase());
-
-			final String dbType = getInternalTechnologyType(technologyType);
-
-			final String connectionString = dbType.equals(TechnologyType.AUTONOMOUS) ?
-					String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService())
-					:
-					String.format("%s:1521/%s", database.getHost(), database.getService());
-
-			System.out.printf("""
-							database_host=%s
-							database_service=%s
-							database_version=%s
-							connection_string_suffix="%s\"""",
-					database.getHost(), database.getService(), database.getVersion(),
-					connectionString);
-
-			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
-
-			final StringBuilder sql = new StringBuilder();
-
-			for (String user : users.split(",")) {
-				sql.append(String.format("""
-						create user %s_%s identified by "%s" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;
-						alter user %s_%s quota unlimited on data;
-						grant CREATE SESSION, CREATE TABLE, CREATE TYPE, CREATE TRIGGER, CREATE SEQUENCE, CREATE PROCEDURE, CREATE CLUSTER, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to %s_%s;
-						\n""", user, runID, password, user, runID, user, runID));
-			}
-
-			final HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(uri))
-					.headers("Accept", "application/json",
-							"Content-Type", "application/sql",
-							"Authorization", basicAuth("admin", database.getPassword()),
-							"Pragma", "no-cache",
-							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION)
-					// WE EXPECT ATP-S 23ai
-					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
-					.build();
-
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
-
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-				if (response.statusCode() == 200) {
-					System.out.println("create=ok");
-				}
-				else {
-					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
-				}
-			}
-		}
-		catch (URISyntaxException | IOException | InterruptedException e) {
-			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
-		}
-	}
-
-	private void dropDatabaseWithORDS(final String jsonInformation) {
-		try {
-			Database database = new JSON<>(Database.class).parse(jsonInformation);
-			database = new JSON<>(Database.class).parse(database.getDatabase());
-
-			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
-
-			final StringBuilder sql = new StringBuilder();
-
-			for (String user : users.split(",")) {
-				sql.append(String.format("drop user %s_%s cascade;\n", user, runID));
-			}
-
-			final HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(uri))
-					.headers("Accept", "application/json",
-							"Content-Type", "application/sql",
-							"Authorization", basicAuth("admin", database.getPassword()),
-							"Pragma", "no-cache",
-							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION)
-					// WE EXPECT ATP-S 23ai
-					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
-					.build();
-
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
-
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-				if (response.statusCode() == 200) {
-					System.out.println("drop=ok");
-				}
-				else {
-					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
-				}
-			}
-		}
-		catch (URISyntaxException | IOException | InterruptedException e) {
-			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
-		}
-	}
+//	private void dropDatabaseWithORDS(final String jsonInformation) {
+//		try {
+//			Database database = new JSON<>(Database.class).parse(jsonInformation);
+//			database = new JSON<>(Database.class).parse(database.getDatabase());
+//
+//			final String uri = String.format("https://%s.oraclecloudapps.com/ords/admin/_/sql", database.getHost());
+//
+//			final StringBuilder sql = new StringBuilder();
+//
+//			for (String user : users.split(",")) {
+//				sql.append(String.format("drop user %s_%s cascade;\n", user, runID));
+//			}
+//
+//			final HttpRequest request = HttpRequest.newBuilder()
+//					.uri(new URI(uri))
+//					.headers("Accept", "application/json",
+//							"Content-Type", "application/sql",
+//							"Authorization", basicAuth("admin", database.getPassword()),
+//							"Pragma", "no-cache",
+//							"Cache-Control", "no-store",
+//							"User-Agent", "setup-testpilot/" + Main.VERSION)
+//					// WE EXPECT ATP-S 23ai
+//					.POST(HttpRequest.BodyPublishers.ofString(sql.toString()))
+//					.build();
+//
+//			try (HttpClient client = HttpClient
+//					.newBuilder()
+//					.version(HttpClient.Version.HTTP_1_1)
+//					.proxy(ProxySelector.getDefault())
+//					.followRedirects(HttpClient.Redirect.NORMAL)
+//					.build()) {
+//
+//				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//
+//				if (response.statusCode() == 200) {
+//					System.out.println("drop=ok");
+//				}
+//				else {
+//					throw new TestPilotException(ATPS_REST_ENDPOINT_ISSUE,
+//							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+//				}
+//			}
+//		}
+//		catch (URISyntaxException | IOException | InterruptedException e) {
+//			throw new TestPilotException(WRONG_ATPS_REST_CALL, e);
+//		}
+//	}
 
 	/**
 	 * Analyze the list of files present inside the commit and compare it
