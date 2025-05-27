@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v0.0.57'
+    default: 'v0.0.58'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -32,16 +32,16 @@ inputs:
 outputs:
   database_host:
     description: 'The database hostname.'
-    value: ${{ steps.create_or_drop.outputs.database_host }}
+    value: ${{ steps.create_or_delete.outputs.database_host }}
   database_service:
     description: 'The database service name.'
-    value: ${{ steps.create_or_drop.outputs.database_service }}
+    value: ${{ steps.create_or_delete.outputs.database_service }}
   database_version:
     description: 'The database version.'
-    value: ${{ steps.create_or_drop.outputs.database_version }}
+    value: ${{ steps.create_or_delete.outputs.database_version }}
   connection_string_suffix:
     description: 'The database connection string suffix (after @).'
-    value: ${{ steps.create_or_drop.outputs.connection_string }}
+    value: ${{ steps.create_or_delete.outputs.connection_string }}
   skip_tests:
     description: 'Should skip tests?'
     value: ${{ steps.analyze_commit.outputs.skip_tests }}

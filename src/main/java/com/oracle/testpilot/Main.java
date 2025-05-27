@@ -23,7 +23,7 @@ public class Main {
 		System.setProperty("java.net.useSystemProxies", "false");
 	}
 
-	public static final String VERSION="0.0.57";
+	public static final String VERSION="0.0.58";
 
 	public static void main(final String[] args) {
 		int exitStatus = 0;
