@@ -12,6 +12,7 @@ import com.oracle.testpilot.model.Action;
 import com.oracle.testpilot.model.Database;
 import com.oracle.testpilot.model.GitHubCommittedFiles;
 import com.oracle.testpilot.model.GitHubFilename;
+import com.oracle.testpilot.model.OAuthToken;
 import com.oracle.testpilot.model.TechnologyType;
 
 import java.io.IOException;
@@ -225,7 +226,7 @@ public class Session {
 		try {
 			final String type = getInternalTechnologyType(technologyType);
 
-			getOAuth2Token();
+			setOAuth2Token();
 
 			final String uri = String.format("https://%s/ords/testpilot/resources/create", apiHOST);
 
@@ -323,7 +324,7 @@ public class Session {
 		try {
 			final String type = getInternalTechnologyType(technologyType);
 
-			getOAuth2Token();
+			setOAuth2Token();
 
 			final String uri = String.format("https://%s/ords/testpilot/resources/delete", apiHOST);
 
@@ -371,7 +372,7 @@ public class Session {
 		}
 	}
 
-	private void getOAuth2Token() throws URISyntaxException, IOException, InterruptedException {
+	private void setOAuth2Token() throws URISyntaxException, IOException, InterruptedException {
 		final String uri = String.format("https://%s/ords/testpilot/oauth/token", apiHOST);
 
 		final HttpRequest request = HttpRequest.newBuilder()
@@ -394,8 +395,9 @@ public class Session {
 
 			final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-			if (response.statusCode() == 200 ) {
-				System.out.println(response.body());
+			if (response.statusCode() == 200) {
+				OAuthToken oauthToken = new JSON<>(OAuthToken.class).parse(response.body());
+				token = oauthToken.getAccess_token();
 			}
 			else {
 				throw new TestPilotException(RETRIEVE_OAUTH2_TOKEN,
