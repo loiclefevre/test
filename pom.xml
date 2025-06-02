@@ -6,7 +6,7 @@
 
     <groupId>com.oracle.testpilot</groupId>
     <artifactId>testpilot-services</artifactId>
-    <version>0.0.58</version>
+    <version>0.0.59</version>
     <name>Test services</name>
     <description>Services offered by Test.</description>
 
@@ -23,13 +23,7 @@
         <mainClass>com.oracle.testpilot.Main</mainClass>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc17</artifactId>
-            <version>23.7.0.25.01</version>
-        </dependency>
-    </dependencies>
+    <dependencies/>
 
     <profiles>
         <profile>
@@ -69,21 +63,11 @@
 
                                 <buildArg>--no-fallback</buildArg>
                                 <buildArg>-H:+ReportExceptionStackTraces</buildArg>
-                                <buildArg>-H:+AddAllCharsets</buildArg>
-                                <buildArg>-Doracle.jdbc.fanEnabled=false</buildArg>
 
                                 <buildArg>--report-unsupported-elements-at-runtime</buildArg>
                                 <buildArg>--enable-all-security-services</buildArg>
                                 <buildArg>-H:ConfigurationFileDirectories=../src/main/resources/META-INF/native-image</buildArg>
                                 <buildArg>-H:-CheckToolchain</buildArg>
-                                <!-- buildArg>- -initialize-at-build-time=sun.instrument.InstrumentationImpl</buildArg -->
-
-                                <buildArg>--trace-class-initialization=oracle.sql.CharacterSet</buildArg>
-                                <buildArg>--initialize-at-build-time=oracle.sql.CharacterSetFactoryDefault</buildArg>
-                                <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet</buildArg>
-                                <buildArg>--initialize-at-build-time=oracle.sql.ConverterArchive</buildArg>
-                                <buildArg>--initialize-at-build-time=oracle.sql.CharacterSet$CharacterSetNamesMapHolder</buildArg>
-                                <buildArg>--initialize-at-build-time=oracle.net.jdbc.nl.mesg.NLSR</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
@@ -127,7 +111,7 @@
             <organization>Oracle</organization>
             <organizationUrl>https://www.oracle.com</organizationUrl>
             <roles>
-                <role>product manager</role>
+                <role>senior product manager</role>
             </roles>
         </developer>
     </developers>

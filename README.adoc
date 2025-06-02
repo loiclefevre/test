@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v0.0.58
+:project-tag:   v0.0.59
 
 ifdef::env-github[]
 :tip-caption: :bulb:
@@ -90,7 +90,7 @@ jobs:
         run: ./build.sh
         shell: bash
 
-      # Drop the database for testing only if tests must be run
+      # Delete the database for testing only if tests must be run
       - uses: {project-owner}/{project-name}@{project-tag}
         if: steps.build_guard.outputs.skip_tests == 'no'
         with:

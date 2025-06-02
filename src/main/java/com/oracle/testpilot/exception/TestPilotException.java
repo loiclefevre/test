@@ -12,8 +12,7 @@ public class TestPilotException extends RuntimeException {
 	public static final int WRONG_MAIN_CONTROLLER_URI = 4;
 	public static final int CREATE_DATABASE_REST_ENDPOINT_ISSUE = 5;
 	public static final int WRONG_MAIN_CONTROLLER_REST_CALL = 7;
-	public static final int WRONG_ATPS_REST_CALL = 8;
-	public static final int ATPS_REST_ENDPOINT_ISSUE = 9;
+	public static final int RETRIEVE_OAUTH2_TOKEN = 8;
 	public static final int CREATE_DATABASE_MISSING_USER_NAME = 10;
 	public static final int CREATE_DATABASE_MISSING_PASSWORD = 11;
 	public static final int CREATE_DATABASE_MISSING_DB_TYPE = 12;
@@ -31,9 +30,6 @@ public class TestPilotException extends RuntimeException {
 	public static final int OWNER_MISSING_PARAMETER = 24;
 	public static final int REPOSITORY_MISSING_PARAMETER = 25;
 	public static final int SHA_MISSING_PARAMETER = 26;
-	public static final int SQL_ERROR = 27;
-	public static final int SQLCL_INTERRUPTED = 28;
-	public static final int SQLCL_ERROR = 29;
 	public static final int DROP_DATABASE_MISSING_USER_NAME = 32;
 	public static final int DROP_DATABASE_MISSING_DB_TYPE = 33;
 	public static final int DROP_DATABASE_REST_ENDPOINT_ISSUE = 34;

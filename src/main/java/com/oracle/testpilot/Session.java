@@ -21,10 +21,6 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Base64;
 
 import static com.oracle.testpilot.exception.TestPilotException.*;
@@ -42,7 +38,8 @@ public class Session {
 
 	private final String runID;
 	private final String apiHOST;
-	private final String token;
+	private String token;
+	private String clientId;
 
 	private String users;
 	private String password;
@@ -57,6 +54,7 @@ public class Session {
 		runID = System.getenv("RUNID");
 		apiHOST = System.getenv("API_HOST");
 		token = System.getenv("TESTPILOT_TOKEN");
+		clientId = System.getenv("TESTPILOT_CLIENT_ID");
 		analyzeCommandLineParameters(args);
 	}
 
@@ -227,6 +225,8 @@ public class Session {
 		try {
 			final String type = getInternalTechnologyType(technologyType);
 
+			getOAuth2Token();
+
 			final String uri = String.format("https://%s/ords/testpilot/resources/create", apiHOST);
 
 			final HttpRequest request = HttpRequest.newBuilder()
@@ -235,7 +235,8 @@ public class Session {
 							"Content-Type", "application/json",
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION,
+							"Authorization", "Bearer " + token)
 					.POST(HttpRequest.BodyPublishers.ofString(
 							String.format("""
 									{
@@ -322,6 +323,8 @@ public class Session {
 		try {
 			final String type = getInternalTechnologyType(technologyType);
 
+			getOAuth2Token();
+
 			final String uri = String.format("https://%s/ords/testpilot/resources/delete", apiHOST);
 
 			final HttpRequest request = HttpRequest.newBuilder()
@@ -330,7 +333,8 @@ public class Session {
 							"Content-Type", "application/json",
 							"Pragma", "no-cache",
 							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION)
+							"User-Agent", "setup-testpilot/" + Main.VERSION,
+							"Authorization", "Bearer " + token)
 					.POST(HttpRequest.BodyPublishers.ofString(
 							String.format("""
 									{
@@ -364,6 +368,39 @@ public class Session {
 		}
 		catch (IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+		}
+	}
+
+	private void getOAuth2Token() throws URISyntaxException, IOException, InterruptedException {
+		final String uri = String.format("https://%s/ords/testpilot/oauth/token", apiHOST);
+
+		final HttpRequest request = HttpRequest.newBuilder()
+				.uri(new URI(uri))
+				.headers("Accept", "application/json",
+						"Content-Type", "application/x-www-form-urlencoded",
+						"Pragma", "no-cache",
+						"Cache-Control", "no-store",
+						"User-Agent", "setup-testpilot/" + Main.VERSION,
+						"Authorization", "Basic " + basicAuth())
+				.POST(HttpRequest.BodyPublishers.ofString("grant_type=credentials"))
+				.build();
+
+		try (HttpClient client = HttpClient
+				.newBuilder()
+				.version(HttpClient.Version.HTTP_1_1)
+				.proxy(ProxySelector.getDefault())
+				.followRedirects(HttpClient.Redirect.NORMAL)
+				.build()) {
+
+			final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+			if (response.statusCode() == 200 ) {
+				System.out.println(response.body());
+			}
+			else {
+				throw new TestPilotException(RETRIEVE_OAUTH2_TOKEN,
+						new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+			}
 		}
 	}
 
@@ -500,9 +537,9 @@ public class Session {
 //		}
 //	}
 
-//	private String basicAuth(final String user, final String password) {
-//		return String.format("Basic %s", Base64.getEncoder().encodeToString((String.format("%s:%s", user, password)).getBytes()));
-//	}
+	private String basicAuth() {
+		return String.format("Basic %s", Base64.getEncoder().encodeToString((String.format("%s:%s", clientId, token)).getBytes()));
+	}
 
 	// For Base DB Systems
 //	private void createDatabaseWithSQL(final String jsonInformation) {
