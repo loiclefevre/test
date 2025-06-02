@@ -381,7 +381,7 @@ public class Session {
 						"Pragma", "no-cache",
 						"Cache-Control", "no-store",
 						"User-Agent", "setup-testpilot/" + Main.VERSION,
-						"Authorization", "Basic " + basicAuth())
+						"Authorization", basicAuth())
 				.POST(HttpRequest.BodyPublishers.ofString("grant_type=credentials"))
 				.build();
 
