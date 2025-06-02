@@ -6,6 +6,10 @@
  */
 package com.oracle.testpilot.exception;
 
+/**
+ * @author LLEFEVRE
+ * @since 1.0.0
+ */
 public class TestPilotException extends RuntimeException {
 	public static final int UNKNOWN_COMMAND_LINE_ARGUMENT = 1;
 	public static final int WRONG_OCI_SERVICE_PARAMETER = 2;

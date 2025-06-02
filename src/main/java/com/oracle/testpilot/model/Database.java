@@ -6,6 +6,10 @@
  */
 package com.oracle.testpilot.model;
 
+/**
+ * @author LLEFEVRE
+ * @since 1.0.0
+ */
 public class Database {
 	private String database;
 	private String host;

@@ -6,6 +6,10 @@
  */
 package com.oracle.testpilot.model;
 
+/**
+ * @author LLEFEVRE
+ * @since 1.0.0
+ */
 public class TechnologyType {
 	public static final String AUTONOMOUS = "autonomous";
 	public static final String DB19C = "db19c";

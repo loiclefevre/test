@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * @author LLEFEVRE
+ * @since 1.0.0
+ */
 public class JSON<T> {
 	private Class<T> clazz;
 	private Constructor<T> constructor;

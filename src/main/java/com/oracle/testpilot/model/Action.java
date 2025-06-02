@@ -6,6 +6,10 @@
  */
 package com.oracle.testpilot.model;
 
+/**
+ * @author LLEFEVRE
+ * @since 1.0.0
+ */
 public enum Action {
 	CREATE("Creating OCI resource..."),
 	SKIP_TESTING("Analyzing committed files to skip tests eventually..."),
