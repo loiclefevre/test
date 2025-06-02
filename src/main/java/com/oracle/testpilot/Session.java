@@ -382,7 +382,7 @@ public class Session {
 						"Cache-Control", "no-store",
 						"User-Agent", "setup-testpilot/" + Main.VERSION,
 						"Authorization", basicAuth())
-				.POST(HttpRequest.BodyPublishers.ofString("grant_type=credentials"))
+				.POST(HttpRequest.BodyPublishers.ofString("grant_type=client_credentials"))
 				.build();
 
 		try (HttpClient client = HttpClient
