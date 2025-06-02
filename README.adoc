@@ -22,6 +22,9 @@ This GitHub Action helps the integration of Test within your GitHub Action workf
 - `delete`: used to de-provision the OCI service tested
 - `skip-testing`: used to check if this GitHub commit should not perform any non-regression test, for example if changes involve files or folders that do not contain source code. By using the output of this action, numerous GitHub Action workflows can see their runtime durations drastically reduced.
 
+Remarks: both `create` and `delete` actions expect an environment variable named `TESTPILOT_CLIENT_ID`.
+
+
 Supported platforms:
 
 - Linux
@@ -79,6 +82,8 @@ jobs:
           action: create
           user: test
           password: ${{ secrets.TEST_USER_PASSWORD }}
+        env:
+          TESTPILOT_CLIENT_ID: ${{ secrets.TESTPILOT_CLIENT_ID }}
 
       # Run the build and the tests against the database
       - name: Run build script
@@ -97,6 +102,8 @@ jobs:
           oci-service: base-database-service-23ai
           action: delete
           user: test
+        env:
+          TESTPILOT_CLIENT_ID: ${{ secrets.TESTPILOT_CLIENT_ID }}
 
 ----
 
