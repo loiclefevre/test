@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v1.0.1
+:project-tag:   v1.0.3
 
 ifdef::env-github[]
 :tip-caption: :bulb:
@@ -21,9 +21,6 @@ This GitHub Action helps the integration of Test within your GitHub Action workf
 - `create`: used to request the provisioning of the OCI service to test
 - `delete`: used to de-provision the OCI service tested
 - `skip-testing`: used to check if this GitHub commit should not perform any non-regression test, for example if changes involve files or folders that do not contain source code. By using the output of this action, numerous GitHub Action workflows can see their runtime durations drastically reduced.
-
-Remarks: both `create` and `delete` actions expect an environment variable named `TESTPILOT_CLIENT_ID`.
-
 
 Supported platforms:
 
