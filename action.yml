@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.1'
+    default: 'v1.0.2'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -21,9 +21,6 @@ inputs:
     required: true
   user:
     description: 'The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space).'
-    required: false
-  password:
-    description: 'The database user password to be used for database creation. If multiple users are required then they will all have the very same password.'
     required: false
   prefix_list:
     description: 'A comma separated list of file(s) or folder(s) that if changed should not trigger any test (example: folder containing documentation).'

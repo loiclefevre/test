@@ -43,7 +43,6 @@ public class Session {
 	private String clientId;
 
 	private String users;
-	private String password;
 	private String technologyType;
 
 	private String prefixList;
@@ -85,15 +84,6 @@ public class Session {
 					}
 					else {
 						throw new TestPilotException(USER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --user parameter"));
-					}
-					break;
-
-				case "--password":
-					if (i + 1 < args.length) {
-						password = args[++i];
-					}
-					else {
-						throw new TestPilotException(PASSWORD_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --password parameter"));
 					}
 					break;
 
@@ -180,7 +170,6 @@ public class Session {
 				    Options:
 				    --oci-service <value>      OCI service type (autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, base-database-service-23ai)
 				    --user <user>              user name to be used (if several, then comma separated list without any space)
-				    --password <password>      password to be used (if several users, they will have the same password)
 				--delete: to de-provision the Oracle Cloud Infrastructure service
 				    Options:
 				    --oci-service <value>      OCI service type (autonomous-transaction-processing-serverless, base-database-service-19c, base-database-service-21c, base-database-service-23ai)
@@ -216,9 +205,6 @@ public class Session {
 		if (users == null || users.isEmpty()) {
 			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
 		}
-		if (password == null || password.isEmpty()) {
-			throw new TestPilotException(CREATE_DATABASE_MISSING_PASSWORD);
-		}
 		if (technologyType == null) {
 			throw new TestPilotException(CREATE_DATABASE_MISSING_DB_TYPE);
 		}
@@ -243,9 +229,8 @@ public class Session {
 									{
 									     "runID": "%s",
 									     "type": "%s",
-									     "user": [%s],
-									     "password": "%s"
-									}""", runID, type, buildUserList(users), password)
+									     "user": [%s]
+									}""", runID, type, buildUserList(users))
 					))
 					.build();
 
