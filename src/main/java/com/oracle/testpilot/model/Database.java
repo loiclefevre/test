@@ -16,7 +16,6 @@ public class Database {
 	private String service;
 	private String password;
 	private String version;
-	private String ocid;
 
 	public Database() {
 	}
@@ -61,14 +60,6 @@ public class Database {
 		this.version = version;
 	}
 
-	public String getOcid() {
-		return ocid;
-	}
-
-	public void setOcid(String ocid) {
-		this.ocid = ocid;
-	}
-
 	@Override
 	public String toString() {
 		final StringBuffer sb = new StringBuffer("Database{");
@@ -76,7 +67,6 @@ public class Database {
 		sb.append(", service='").append(service).append('\'');
 		sb.append(", password='").append(password).append('\'');
 		sb.append(", version='").append(version).append('\'');
-		sb.append(", ocid='").append(ocid).append('\'');
 		sb.append('}');
 		return sb.toString();
 	}

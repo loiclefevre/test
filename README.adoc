@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v1.0.0
+:project-tag:   v1.0.1
 
 ifdef::env-github[]
 :tip-caption: :bulb:
@@ -53,6 +53,7 @@ Following outputs may be used as `step.if` or for `step.env` keys:
 | Name              | Output of Action | Description
 | database_host              | create   | The hostname of the database(s).
 | database_service           | create   | The database service name of the database(s).
+| database_password          | create   | The database password of the database(s).
 | database_version           | create   | The version of the database(s).
 | connection_string_suffix | create   | The database connection string suffix (after @), it can be used to build the full JDBC connection string.
 | skip_tests        | skip-testing      | 'yes' if tests can be skipped, 'no' otherwise.
