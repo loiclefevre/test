@@ -257,7 +257,7 @@ public class Session {
 							System.out.printf("""
 											database_host=%s
 											database_service=%s
-											::add-mask::"%s"
+											::add-mask::%s
 											database_password="%s"
 											database_version=%s
 											connection_string_suffix="%s"%n""",
@@ -276,7 +276,7 @@ public class Session {
 							System.out.printf("""
 											database_host=%s
 											database_service=%s
-											::add-mask::"%s"
+											::add-mask::%s
 											database_password="%s"
 											database_version=%s
 											connection_string_suffix="%s"%n""",
