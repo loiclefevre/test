@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v1.0.10
+:project-tag:   v1.0.11
 
 ifdef::env-github[]
 :tip-caption: :bulb:

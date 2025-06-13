@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.10'
+    default: 'v1.0.11'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -64,7 +64,7 @@ runs:
       run: |
         ${GITHUB_ACTION_PATH}/setup-testpilot --skip-testing \
         --owner "${{ github.repository_owner }}" --repository "${{ github.event.repository.name }}" --sha "${{ github.sha }}" \
-        --prefix-list "${{ inputs.prefix_list }}" >> $GITHUB_OUTPUT
+        --prefix-list "${{ inputs.prefix_list }}"
 
     - name: 'Create or Delete'
       id: create_or_delete
@@ -74,11 +74,5 @@ runs:
         RUNID: ${{ github.run_number }}
       run: |
         ${GITHUB_ACTION_PATH}/setup-testpilot --${{ inputs.action }} \
-        --user "${{ inputs.user }}" --oci-service "${{ inputs.oci-service }}" >> $GITHUB_OUTPUT
+        --user "${{ inputs.user }}" --oci-service "${{ inputs.oci-service }}"
 
-    - name: 'Add mask for password'
-      if: inputs.action == 'create' || inputs.action == 'delete'
-      shell: bash -leo pipefail {0}
-      run: ${GITHUB_ACTION_PATH}/hide-password-in-logs.sh
-      env:
-        PASSWORD: ${{ steps.create_or_delete.outputs.database_password }}
