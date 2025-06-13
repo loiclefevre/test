@@ -257,11 +257,10 @@ public class Session {
 							System.out.printf("""
 											database_host=%s
 											database_service=%s
-											::add-mask::%s
 											database_password="%s"
 											database_version=%s
 											connection_string_suffix="%s"%n""",
-									database.getHost(), database.getService(), database.getPassword(), database.getPassword(), database.getVersion(),
+									database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
 									connectionString);
 						}
 						break;
@@ -276,11 +275,10 @@ public class Session {
 							System.out.printf("""
 											database_host=%s
 											database_service=%s
-											::add-mask::%s
 											database_password="%s"
 											database_version=%s
 											connection_string_suffix="%s"%n""",
-									database.getHost(), database.getService(), database.getPassword(), database.getPassword(), database.getVersion(), connectionString);
+									database.getHost(), database.getService(), database.getPassword(), database.getVersion(), connectionString);
 						}
 						break;
 					}
