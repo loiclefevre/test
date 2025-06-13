@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.6'
+    default: 'v1.0.7'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -75,3 +75,9 @@ runs:
       run: |
         ${GITHUB_ACTION_PATH}/setup-testpilot --${{ inputs.action }} \
         --user "${{ inputs.user }}" --oci-service "${{ inputs.oci-service }}" >> $GITHUB_OUTPUT
+
+    - name: 'Add mask for password'
+      if: inputs.action == 'create' || inputs.action == 'delete'
+      shell: bash -leo pipefail {0}
+      run: |
+        echo "::add-mask::${{ steps.create_or_delete.outputs.database_password }}"
