@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.8'
+    default: 'v1.0.9'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -78,6 +78,7 @@ runs:
 
     - name: 'Add mask for password'
       if: inputs.action == 'create' || inputs.action == 'delete'
-      shell: bash
+      shell: bash -leo pipefail {0}
       run: |
-        echo "::add-mask::${{ steps.create_or_delete.outputs.database_password }}"
+        password=${{ steps.create_or_delete.outputs.database_password }}
+        echo "::add-mask::$password"
