@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.11'
+    default: 'v1.0.12'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -41,7 +41,7 @@ outputs:
     value: ${{ steps.create_or_delete.outputs.database_version }}
   connection_string_suffix:
     description: 'The database connection string suffix (after @).'
-    value: ${{ steps.create_or_delete.outputs.connection_string }}
+    value: ${{ steps.create_or_delete.outputs.connection_string_suffix }}
   skip_tests:
     description: 'Should skip tests?'
     value: ${{ steps.analyze_commit.outputs.skip_tests }}

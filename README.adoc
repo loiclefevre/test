@@ -2,7 +2,7 @@
 :linkattrs:
 :project-owner: llefevre
 :project-name:  test
-:project-tag:   v1.0.11
+:project-tag:   v1.0.12
 
 ifdef::env-github[]
 :tip-caption: :bulb:
@@ -36,7 +36,7 @@ Following inputs may be used as `step.with` keys:
 | action  | Yes      | create | A valid action among: `create`, `delete`, `skip-testing`.
 | oci-service |          | autonomous-transaction-processing-serverless            | A valid Oracle Cloud Infrastructure service to be tested.
 Valid OCI service are: `autonomous-transaction-processing-serverless`, `base-database-service-19c`, `base-database-service-21c`, and `base-database-service-23ai`.
-| user     |          |                 | The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space).
+| user     |          |                 | The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space). Limit usernames to 118 chars maximum.
 | prefix_list |  |  | A comma separated list of file(s) or folder(s) that if changed should not trigger any test (example: folder containing documentation).
 |===
 
@@ -51,7 +51,7 @@ Following outputs may be used as `step.if` or for `step.env` keys:
 | database_service           | create   | The database service name of the database(s).
 | database_password          | create   | The database password of the database(s).
 | database_version           | create   | The version of the database(s).
-| connection_string_suffix | create   | The database connection string suffix (after @), it can be used to build the full JDBC connection string.
+| connection_string_suffix | create   | The database connection string suffix (to be put after @), it can be used to build the full JDBC connection string.
 | skip_tests        | skip-testing      | 'yes' if tests can be skipped, 'no' otherwise.
 |===
 
@@ -63,7 +63,7 @@ Following outputs may be used as `step.if` or for `step.env` keys:
 jobs:
   test:
     steps:
-      # Look if committed files should trigger a build and running tests
+      # Look if committed files should trigger a build with tests
       - id: build_guard
         uses: {project-owner}/{project-name}@{project-tag}
         with:
@@ -78,8 +78,6 @@ jobs:
           oci-service: base-database-service-23ai
           action: create
           user: test
-        env:
-          TESTPILOT_CLIENT_ID: ${{ secrets.TESTPILOT_CLIENT_ID }}
 
       # Run the build and the tests against the database
       - name: Run build script
@@ -99,8 +97,6 @@ jobs:
           oci-service: base-database-service-23ai
           action: delete
           user: test
-        env:
-          TESTPILOT_CLIENT_ID: ${{ secrets.TESTPILOT_CLIENT_ID }}
 
 ----
 

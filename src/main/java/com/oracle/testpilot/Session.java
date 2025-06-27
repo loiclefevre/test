@@ -16,9 +16,7 @@ import com.oracle.testpilot.model.OAuthToken;
 import com.oracle.testpilot.model.TechnologyType;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ProxySelector;
@@ -262,16 +260,18 @@ public class Session {
 
 							final String connectionString = String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService());
 
-							try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-								System.out.printf("::add-mask::%s%n",database.getPassword());
-								out.printf("""
-											database_host=%s
-											database_service=%s
-											database_password="%s"
-											database_version=%s
-											connection_string_suffix="%s"%n""",
-										database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
-										connectionString);
+							if(githubOutput != null) {
+								try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+									System.out.printf("::add-mask::%s%n", database.getPassword());
+									out.printf("""
+													database_host=%s
+													database_service=%s
+													database_password="%s"
+													database_version=%s
+													connection_string_suffix="%s"%n""",
+											database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
+											connectionString);
+								}
 							}
 						}
 						break;
@@ -283,23 +283,27 @@ public class Session {
 
 							final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
 
-							try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-								System.out.printf("::add-mask::%s%n",database.getPassword());
-								out.printf("""
-											database_host=%s
-											database_service=%s
-											database_password="%s"
-											database_version=%s
-											connection_string_suffix="%s"%n""",
-										database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
-										connectionString);
+							if(githubOutput != null) {
+								try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+									System.out.printf("::add-mask::%s%n", database.getPassword());
+									out.printf("""
+													database_host=%s
+													database_service=%s
+													database_password="%s"
+													database_version=%s
+													connection_string_suffix="%s"%n""",
+											database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
+											connectionString);
+								}
 							}
 						}
 						break;
 					}
 
-					try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-						out.println("create=ok");
+					if(githubOutput != null) {
+						try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+							out.println("create=ok");
+						}
 					}
 				}
 				else {
@@ -360,8 +364,10 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200 || response.statusCode() == 204) {
-					try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-						out.println("delete=ok");
+					if(githubOutput != null) {
+						try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+							out.println("delete=ok");
+						}
 					}
 				}
 				else {
@@ -501,14 +507,18 @@ public class Session {
 					}
 
 					if (filesNumber == filesMatchingAnyPrefix) {
-						try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-							out.println("skip_tests=yes");
+						if(githubOutput != null) {
+							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+								out.println("skip_tests=yes");
+							}
 						}
 						System.exit(0);
 					}
 					else {
-						try(PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-							out.println("skip_tests=no");
+						if(githubOutput != null) {
+							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+								out.println("skip_tests=no");
+							}
 						}
 						System.exit(0);
 					}
