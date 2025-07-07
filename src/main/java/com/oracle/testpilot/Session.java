@@ -240,78 +240,88 @@ public class Session {
 					))
 					.build();
 
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
+			boolean done = false;
 
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+			do {
+				try (HttpClient client = HttpClient
+						.newBuilder()
+						.version(HttpClient.Version.HTTP_1_1)
+						.proxy(ProxySelector.getDefault())
+						.followRedirects(HttpClient.Redirect.NORMAL)
+						.build()) {
 
-				if (response.statusCode() == 200 || response.statusCode() == 201) {
-					// retrieve JSON response
-					final String jsonInformation = response.body();
+					final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-					switch (type) {
-						case TechnologyType.AUTONOMOUS: {
-							Database database = new JSON<>(Database.class).parse(jsonInformation);
-							database = new JSON<>(Database.class).parse(database.getDatabase());
+					if (response.statusCode() == 200 || response.statusCode() == 201) {
+						done = true;
 
-							final String connectionString = String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService());
+						// retrieve JSON response
+						final String jsonInformation = response.body();
 
-							if(githubOutput != null) {
-								try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-									System.out.printf("::add-mask::%s%n", database.getPassword());
-									out.printf("""
-													database_host=%s
-													database_service=%s
-													database_password="%s"
-													database_version=%s
-													connection_string_suffix="%s"%n""",
-											database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
-											connectionString);
+						switch (type) {
+							case TechnologyType.AUTONOMOUS: {
+								Database database = new JSON<>(Database.class).parse(jsonInformation);
+								database = new JSON<>(Database.class).parse(database.getDatabase());
+
+								final String connectionString = String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService());
+
+								if (githubOutput != null) {
+									try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+										System.out.printf("::add-mask::%s%n", database.getPassword());
+										out.printf("""
+														database_host=%s
+														database_service=%s
+														database_password="%s"
+														database_version=%s
+														connection_string_suffix="%s"%n""",
+												database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
+												connectionString);
+									}
 								}
 							}
-						}
-						break;
-						case TechnologyType.DB19C:
-						case TechnologyType.DB21C:
-						case TechnologyType.DB23AI: {
-							Database database = new JSON<>(Database.class).parse(jsonInformation);
-							database = new JSON<>(Database.class).parse(database.getDatabase());
+							break;
+							case TechnologyType.DB19C:
+							case TechnologyType.DB21C:
+							case TechnologyType.DB23AI: {
+								Database database = new JSON<>(Database.class).parse(jsonInformation);
+								database = new JSON<>(Database.class).parse(database.getDatabase());
 
-							final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
+								final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
 
-							if(githubOutput != null) {
-								try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-									System.out.printf("::add-mask::%s%n", database.getPassword());
-									out.printf("""
-													database_host=%s
-													database_service=%s
-													database_password="%s"
-													database_version=%s
-													connection_string_suffix="%s"%n""",
-											database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
-											connectionString);
+								if (githubOutput != null) {
+									try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+										System.out.printf("::add-mask::%s%n", database.getPassword());
+										out.printf("""
+														database_host=%s
+														database_service=%s
+														database_password="%s"
+														database_version=%s
+														connection_string_suffix="%s"%n""",
+												database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
+												connectionString);
+									}
 								}
 							}
+							break;
 						}
-						break;
-					}
 
-					if(githubOutput != null) {
-						try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-							out.println("create=ok");
+						if (githubOutput != null) {
+							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+								out.println("create=ok");
+							}
 						}
 					}
+					else if(response.statusCode() == 429) {
+						// too many requests (rate limiting)
+						Thread.sleep(10 * 1000L);
+					}
+					else {
+						throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
+								new IllegalStateException("HTTP/S status code: " + response.statusCode(),
+										new IllegalStateException(response.body())));
+					}
 				}
-				else {
-					throw new TestPilotException(CREATE_DATABASE_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode(),
-									new IllegalStateException(response.body())));
-				}
-			}
+			} while(!done);
 		}
 		catch (URISyntaxException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);
@@ -354,27 +364,36 @@ public class Session {
 					))
 					.build();
 
-			try (HttpClient client = HttpClient
-					.newBuilder()
-					.version(HttpClient.Version.HTTP_1_1)
-					.proxy(ProxySelector.getDefault())
-					.followRedirects(HttpClient.Redirect.NORMAL)
-					.build()) {
+			boolean done = false;
 
-				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+			do {
+				try (HttpClient client = HttpClient
+						.newBuilder()
+						.version(HttpClient.Version.HTTP_1_1)
+						.proxy(ProxySelector.getDefault())
+						.followRedirects(HttpClient.Redirect.NORMAL)
+						.build()) {
 
-				if (response.statusCode() == 200 || response.statusCode() == 204) {
-					if(githubOutput != null) {
-						try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-							out.println("delete=ok");
+					final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+					if (response.statusCode() == 200 || response.statusCode() == 204) {
+						done = true;
+						if (githubOutput != null) {
+							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+								out.println("delete=ok");
+							}
 						}
 					}
+					else if(response.statusCode() == 429) {
+						// too many requests (rate limiting)
+						Thread.sleep(10 * 1000L);
+					}
+					else {
+						throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
+								new IllegalStateException("HTTP/S status code: " + response.statusCode()));
+					}
 				}
-				else {
-					throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
-							new IllegalStateException("HTTP/S status code: " + response.statusCode()));
-				}
-			}
+			} while(!done);
 		}
 		catch (URISyntaxException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_URI, e);

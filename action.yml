@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.12'
+    default: 'v1.0.13'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -20,7 +20,7 @@ inputs:
     default: 'autonomous-transaction-processing-serverless'
     required: true
   user:
-    description: 'The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space).'
+    description: 'The database username to be used for database creation. If multiple users are required then enter a comma-separated list of usernames (no space). Limit usernames to 118 chars maximum.'
     required: false
   prefix_list:
     description: 'A comma separated list of file(s) or folder(s) that if changed should not trigger any test (example: folder containing documentation).'
