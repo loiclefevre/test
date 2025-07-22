@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Base64;
 
 import static com.oracle.testpilot.exception.TestPilotException.*;
@@ -37,6 +38,8 @@ import static com.oracle.testpilot.model.Action.*;
  * @since 1.0.0
  */
 public class Session {
+
+	private static final int ONE_MINUTE_TIMEOUT = 60; // seconds
 
 	public Action action;
 
@@ -245,6 +248,7 @@ public class Session {
 			do {
 				try (HttpClient client = HttpClient
 						.newBuilder()
+						.connectTimeout(Duration.ofSeconds(ONE_MINUTE_TIMEOUT))
 						.version(HttpClient.Version.HTTP_1_1)
 						.proxy(ProxySelector.getDefault())
 						.followRedirects(HttpClient.Redirect.NORMAL)
@@ -369,6 +373,7 @@ public class Session {
 			do {
 				try (HttpClient client = HttpClient
 						.newBuilder()
+						.connectTimeout(Duration.ofSeconds(ONE_MINUTE_TIMEOUT))
 						.version(HttpClient.Version.HTTP_1_1)
 						.proxy(ProxySelector.getDefault())
 						.followRedirects(HttpClient.Redirect.NORMAL)
@@ -419,6 +424,7 @@ public class Session {
 
 		try (HttpClient client = HttpClient
 				.newBuilder()
+				.connectTimeout(Duration.ofSeconds(ONE_MINUTE_TIMEOUT))
 				.version(HttpClient.Version.HTTP_1_1)
 				.proxy(ProxySelector.getDefault())
 				.followRedirects(HttpClient.Redirect.NORMAL)
