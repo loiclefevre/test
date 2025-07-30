@@ -214,6 +214,9 @@ public class Session {
 		if (users == null || users.isEmpty()) {
 			throw new TestPilotException(CREATE_DATABASE_MISSING_USER_NAME);
 		}
+		if(badChars(users)) {
+			throw new TestPilotException(CREATE_DATABASE_WRONG_USER_NAME);
+		}
 		if (technologyType == null) {
 			throw new TestPilotException(CREATE_DATABASE_MISSING_DB_TYPE);
 		}
@@ -339,6 +342,9 @@ public class Session {
 		if (users == null || users.isEmpty()) {
 			throw new TestPilotException(DROP_DATABASE_MISSING_USER_NAME);
 		}
+		if(badChars(users)) {
+			throw new TestPilotException(DROP_DATABASE_WRONG_USER_NAME);
+		}
 		if (technologyType == null) {
 			throw new TestPilotException(DROP_DATABASE_MISSING_DB_TYPE);
 		}
@@ -406,6 +412,14 @@ public class Session {
 		catch (IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
 		}
+	}
+
+	private boolean badChars(final String users) {
+		for(int i = 0; i < users.length(); i++) {
+			final char c = users.charAt(i);
+			if( !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ',' || (c >= '0' && c <= '9')) ) return true;
+		}
+		return false;
 	}
 
 	private void setOAuth2Token() throws URISyntaxException, IOException, InterruptedException {
