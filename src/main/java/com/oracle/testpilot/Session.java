@@ -237,12 +237,8 @@ public class Session {
 							"User-Agent", "setup-testpilot/" + Main.VERSION,
 							"Authorization", "Bearer " + token)
 					.POST(HttpRequest.BodyPublishers.ofString(
-							String.format("""
-									{
-									     "runID": "%s",
-									     "type": "%s",
-									     "user": [%s]
-									}""", runID, type, buildUserList(users))
+							String.format("{\"runID\":\"%s\",\"type\":\"%s\",\"user\":[%s]}",
+										  runID, type, buildUserList(users,true))
 					))
 					.build();
 
@@ -365,12 +361,8 @@ public class Session {
 							"User-Agent", "setup-testpilot/" + Main.VERSION,
 							"Authorization", "Bearer " + token)
 					.POST(HttpRequest.BodyPublishers.ofString(
-							String.format("""
-									{
-									     "runID": "%s",
-									     "type": "%s",
-									     "user": [%s]
-									}""", runID, type, buildUserList(users))
+							String.format("{\"runID\":\"%s\",\"type\":\"%s\",\"user\":[%s]}",
+									runID, type, buildUserList(users,false))
 					))
 					.build();
 
@@ -457,10 +449,13 @@ public class Session {
 		}
 	}
 
-	private String buildUserList(final String users) {
+	private String buildUserList(final String users, boolean create) {
 		final StringBuilder sb = new StringBuilder();
 		int i = 0;
 		for (String user : users.split(",")) {
+			if(user.isEmpty() || user.length() > 118) {
+				throw new TestPilotException(create ? CREATE_DATABASE_WRONG_USER_NAME_LENGTH : DROP_DATABASE_WRONG_USER_NAME_LENGTH);
+			}
 			if (i > 0) {
 				sb.append(',');
 			}
