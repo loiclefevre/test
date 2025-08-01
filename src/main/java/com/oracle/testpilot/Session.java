@@ -16,6 +16,7 @@ import com.oracle.testpilot.model.OAuthToken;
 import com.oracle.testpilot.model.TechnologyType;
 
 import java.io.BufferedOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -40,6 +41,10 @@ import static com.oracle.testpilot.model.Action.*;
 public class Session {
 
 	private static final int ONE_MINUTE_TIMEOUT = 60; // seconds
+	private static final int MAX_USERS = 10;
+	private static final int MAX_USER_LENGTH = 118;
+	private static final int COMMA_LENGTH = 1;
+	private static final int MAX_USERS_LENGTH = (MAX_USER_LENGTH + COMMA_LENGTH) * MAX_USERS - COMMA_LENGTH;
 
 	public Action action;
 
@@ -48,7 +53,7 @@ public class Session {
 	private final String runID;
 	private final String apiHOST;
 	private String token;
-	private String clientId;
+	private final String clientId;
 
 	private String users;
 	private String technologyType;
@@ -90,6 +95,10 @@ public class Session {
 				case "--user":
 					if (i + 1 < args.length) {
 						users = args[++i];
+
+						if(users.length() > MAX_USERS_LENGTH) {
+							throw new TestPilotException(USER_PARAMETER_TOO_LONG, new IllegalArgumentException("Value for --user parameter is too long, maximum length: "+MAX_USERS_LENGTH));
+						}
 					}
 					else {
 						throw new TestPilotException(USER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --user parameter"));
@@ -268,19 +277,7 @@ public class Session {
 
 								final String connectionString = String.format("(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=%s.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=%s_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))", database.getHost(), database.getService());
 
-								if (githubOutput != null) {
-									try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-										System.out.printf("::add-mask::%s%n", database.getPassword());
-										out.printf("""
-														database_host=%s
-														database_service=%s
-														database_password="%s"
-														database_version=%s
-														connection_string_suffix="%s"%n""",
-												database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
-												connectionString);
-									}
-								}
+								writeDatabaseInformationToGitHubOutput(database, connectionString);
 							}
 							break;
 							case TechnologyType.DB19C:
@@ -291,19 +288,7 @@ public class Session {
 
 								final String connectionString = String.format("%s:1521/%s", database.getHost(), database.getService());
 
-								if (githubOutput != null) {
-									try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
-										System.out.printf("::add-mask::%s%n", database.getPassword());
-										out.printf("""
-														database_host=%s
-														database_service=%s
-														database_password="%s"
-														database_version=%s
-														connection_string_suffix="%s"%n""",
-												database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
-												connectionString);
-									}
-								}
+								writeDatabaseInformationToGitHubOutput(database, connectionString);
 							}
 							break;
 						}
@@ -331,6 +316,22 @@ public class Session {
 		}
 		catch (IOException | InterruptedException e) {
 			throw new TestPilotException(WRONG_MAIN_CONTROLLER_REST_CALL, e);
+		}
+	}
+
+	private void writeDatabaseInformationToGitHubOutput(Database database, String connectionString) throws FileNotFoundException {
+		if (githubOutput != null) {
+			try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+				System.out.printf("::add-mask::%s%n", database.getPassword());
+				out.printf("""
+								database_host=%s
+								database_service=%s
+								database_password="%s"
+								database_version=%s
+								connection_string_suffix="%s"%n""",
+						database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
+						connectionString);
+			}
 		}
 	}
 
@@ -452,8 +453,12 @@ public class Session {
 	private String buildUserList(final String users, boolean create) {
 		final StringBuilder sb = new StringBuilder();
 		int i = 0;
-		for (String user : users.split(",")) {
-			if(user.isEmpty() || user.length() > 118) {
+		final String[] usersArray = users.split(",");
+		if(usersArray.length > MAX_USERS) {
+			throw new TestPilotException(TOO_MANY_USERS_PROVIDED);
+		}
+		for (String user : usersArray) {
+			if(user.isEmpty() || user.length() > MAX_USER_LENGTH) {
 				throw new TestPilotException(create ? CREATE_DATABASE_WRONG_USER_NAME_LENGTH : DROP_DATABASE_WRONG_USER_NAME_LENGTH);
 			}
 			if (i > 0) {

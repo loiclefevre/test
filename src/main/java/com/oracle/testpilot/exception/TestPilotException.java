@@ -19,6 +19,7 @@ public class TestPilotException extends RuntimeException {
 	public static final int CREATE_DATABASE_WRONG_USER_NAME = 6;
 	public static final int WRONG_MAIN_CONTROLLER_REST_CALL = 7;
 	public static final int RETRIEVE_OAUTH2_TOKEN = 8;
+	public static final int TOO_MANY_USERS_PROVIDED = 9;
 	public static final int CREATE_DATABASE_MISSING_USER_NAME = 10;
 	public static final int CREATE_DATABASE_MISSING_PASSWORD = 11;
 	public static final int CREATE_DATABASE_MISSING_DB_TYPE = 12;
@@ -30,6 +31,7 @@ public class TestPilotException extends RuntimeException {
 	public static final int SKIP_TESTING_WRONG_REST_CALL = 18;
 	public static final int SKIP_TESTING_REST_ENDPOINT_ISSUE = 19;
 	public static final int USER_MISSING_PARAMETER = 20;
+	public static final int USER_PARAMETER_TOO_LONG = 21;
 	public static final int OCI_SERVICE_MISSING_PARAMETER = 22;
 	public static final int PREFIX_LIST_MISSING_PARAMETER = 23;
 	public static final int OWNER_MISSING_PARAMETER = 24;
