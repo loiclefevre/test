@@ -41,6 +41,7 @@ import static com.oracle.testpilot.model.Action.*;
 public class Session {
 
 	private static final int ONE_MINUTE_TIMEOUT = 60; // seconds
+	private static final int TEN_MINUTES_TIMEOUT = 600; // seconds
 	private static final int MAX_USERS = 10;
 	private static final int MAX_USER_LENGTH = 118;
 	private static final int COMMA_LENGTH = 1;
@@ -64,10 +65,38 @@ public class Session {
 	private String sha;
 
 	public Session(final String[] args) {
+		// ---------------------------------------------------------------------------------------------------------------------
+		// GITHUB_OUTPUT:
+		// The path on the runner to the file that sets the current step's outputs from workflow
+		// commands. The path to this file is unique to the current step and changes for each step
+		// in a job. For example, /home/runner/work/_temp/_runner_file_commands/set_output_a50ef383-b063-46d9-9157-57953fc9f3f0.
+		// see https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-commands#setting-an-output-parameter
 		githubOutput = System.getenv("GITHUB_OUTPUT");
+		// ---------------------------------------------------------------------------------------------------------------------
+		// RUNID:
+		// Variable initialized by this GitHub Action from within its action.yml file.
+		// env:
+		//   RUNID: ${{ github.run_number }}
+		// github.run_number: A unique number for each run of a particular workflow in a repository.
+		// This number begins at 1 for the workflow's first run, and increments with each new run. This
+		// number does not change if you re-run the workflow run.
+		// see https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
 		runID = System.getenv("RUNID");
+		// ---------------------------------------------------------------------------------------------------------------------
+		// API_HOST:
+		// URL targeting the private internal REST API endpoints to create and delete a user schema to be used to
+		// connect to the database to test the framework with. This environment variable is not exposed (read or write) to
+		// end users. It is also masked from standard GitHub Action log output.
 		apiHOST = System.getenv("API_HOST");
+		// ---------------------------------------------------------------------------------------------------------------------
+		// TESTPILOT_TOKEN:
+		// OAuth2 client secret to use for accessing the private internal REST API endpoints to create and delete a user schema.
+		// This environment variable is not exposed (read or write) to end users. It is also masked from standard GitHub Action log output.
 		token = System.getenv("TESTPILOT_TOKEN");
+		// ---------------------------------------------------------------------------------------------------------------------
+		// TESTPILOT_CLIENT_ID:
+		// OAuth2 client id to use for accessing the private internal REST API endpoints to create and delete a user schema.
+		// This environment variable is not exposed (read or write) to end users. It is also masked from standard GitHub Action log output.
 		clientId = System.getenv("TESTPILOT_CLIENT_ID");
 		analyzeCommandLineParameters(args);
 	}
@@ -349,30 +378,30 @@ public class Session {
 		try {
 			final String type = getInternalTechnologyType(technologyType);
 
-			setOAuth2Token();
-
 			final String uri = String.format("https://%s/ords/testpilot/resources/delete", apiHOST);
-
-			final HttpRequest request = HttpRequest.newBuilder()
-					.uri(new URI(uri))
-					.headers("Accept", "application/json",
-							"Content-Type", "application/json",
-							"Pragma", "no-cache",
-							"Cache-Control", "no-store",
-							"User-Agent", "setup-testpilot/" + Main.VERSION,
-							"Authorization", "Bearer " + token)
-					.POST(HttpRequest.BodyPublishers.ofString(
-							String.format("{\"runID\":\"%s\",\"type\":\"%s\",\"user\":[%s]}",
-									runID, type, buildUserList(users,false))
-					))
-					.build();
 
 			boolean done = false;
 
 			do {
+				setOAuth2Token();
+
+				final HttpRequest request = HttpRequest.newBuilder()
+						.uri(new URI(uri))
+						.headers("Accept", "application/json",
+								"Content-Type", "application/json",
+								"Pragma", "no-cache",
+								"Cache-Control", "no-store",
+								"User-Agent", "setup-testpilot/" + Main.VERSION,
+								"Authorization", "Bearer " + token)
+						.POST(HttpRequest.BodyPublishers.ofString(
+								String.format("{\"runID\":\"%s\",\"type\":\"%s\",\"user\":[%s]}",
+										runID, type, buildUserList(users,false))
+						))
+						.build();
+
 				try (HttpClient client = HttpClient
 						.newBuilder()
-						.connectTimeout(Duration.ofSeconds(ONE_MINUTE_TIMEOUT))
+						.connectTimeout(Duration.ofSeconds(TEN_MINUTES_TIMEOUT))
 						.version(HttpClient.Version.HTTP_1_1)
 						.proxy(ProxySelector.getDefault())
 						.followRedirects(HttpClient.Redirect.NORMAL)
@@ -391,6 +420,15 @@ public class Session {
 					else if(response.statusCode() == 429) {
 						// too many requests (rate limiting)
 						Thread.sleep(10 * 1000L);
+					}
+					else if(response.statusCode() == 504) {
+						// time out after 10 minutes trying to delete the database
+						done = true;
+						if(githubOutput != null) {
+							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
+								out.println("delete=ko");
+							}
+						}
 					}
 					else {
 						throw new TestPilotException(DROP_DATABASE_REST_ENDPOINT_ISSUE,
