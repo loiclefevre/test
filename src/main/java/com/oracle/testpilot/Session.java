@@ -448,7 +448,7 @@ public class Session {
 	private boolean badChars(final String users) {
 		for(int i = 0; i < users.length(); i++) {
 			final char c = users.charAt(i);
-			if( !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ',' || (c >= '0' && c <= '9')) ) return true;
+			if( !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ',' || c == '-' || c == ':' || (c >= '0' && c <= '9')) ) return true;
 		}
 		return false;
 	}
