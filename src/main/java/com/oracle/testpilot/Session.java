@@ -421,6 +421,10 @@ public class Session {
 						// too many requests (rate limiting)
 						Thread.sleep(10 * 1000L);
 					}
+					else if(response.statusCode() == 503) {
+						// ORA-01940: cannot drop a user that is currently connected
+						Thread.sleep(10 * 1000L);
+					}
 					else if(response.statusCode() == 504) {
 						// time out after 10 minutes trying to delete the database
 						done = true;
