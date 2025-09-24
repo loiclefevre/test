@@ -355,7 +355,7 @@ public class Session {
 				out.printf("""
 								database_host=%s
 								database_service=%s
-								database_password="%s"
+								database_password=%s
 								database_version=%s
 								connection_string_suffix="%s"%n""",
 						database.getHost(), database.getService(), database.getPassword(), database.getVersion(),
