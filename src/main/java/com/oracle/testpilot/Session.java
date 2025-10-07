@@ -8,10 +8,12 @@ package com.oracle.testpilot;
 
 import com.oracle.testpilot.exception.TestPilotException;
 import com.oracle.testpilot.json.JSON;
+import com.oracle.testpilot.json.JSONArray;
 import com.oracle.testpilot.model.Action;
 import com.oracle.testpilot.model.Database;
 import com.oracle.testpilot.model.GitHubCommittedFiles;
 import com.oracle.testpilot.model.GitHubFilename;
+import com.oracle.testpilot.model.GitHubPullRequestCommits;
 import com.oracle.testpilot.model.OAuthToken;
 import com.oracle.testpilot.model.TechnologyType;
 
@@ -62,7 +64,7 @@ public class Session {
 	private String prefixList;
 	private String owner;
 	private String repository;
-	private String sha;
+	private String pullRequestNumber;
 
 	public Session(final String[] args) {
 		// ---------------------------------------------------------------------------------------------------------------------
@@ -191,12 +193,12 @@ public class Session {
 					}
 					break;
 
-				case "--sha":
+				case "--pull-request-number":
 					if (i + 1 < args.length) {
-						sha = args[++i];
+						pullRequestNumber = args[++i];
 					}
 					else {
-						throw new TestPilotException(SHA_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --sha parameter"));
+						throw new TestPilotException(PULL_REQUEST_NUMBER_MISSING_PARAMETER, new IllegalArgumentException("Missing value for --pull-request-number parameter"));
 					}
 					break;
 
@@ -528,7 +530,7 @@ public class Session {
 	}
 
 	/**
-	 * Analyze the list of files present inside the commit and compare it
+	 * Analyze the list of files present inside the commit(s) of a PR and compare it
 	 * with a list of files and folder prefixes that must not trigger any
 	 * build and test (example: documentation). In that case, the response
 	 * is clear: no need to build.
@@ -540,15 +542,15 @@ public class Session {
 		if (repository == null || repository.isEmpty()) {
 			throw new TestPilotException(SKIP_TESTING_MISSING_REPOSITORY);
 		}
-		if (sha == null || sha.isEmpty()) {
-			throw new TestPilotException(SKIP_TESTING_MISSING_SHA);
+		if (pullRequestNumber == null || pullRequestNumber.isEmpty()) {
+			throw new TestPilotException(SKIP_TESTING_MISSING_PULL_REQUEST_NUMBER);
 		}
 		if (prefixList == null || prefixList.isEmpty()) {
 			throw new TestPilotException(SKIP_TESTING_MISSING_PREFIX_LIST);
 		}
 
 		try {
-			final String uri = String.format("https://api.github.com/repos/%s/%s/commits/%s", owner, repository, sha);
+			final String uri = String.format("https://api.github.com/repos/%s/%s/pulls/%s/commits", owner, repository, pullRequestNumber);
 
 			final HttpRequest request = HttpRequest.newBuilder()
 					.uri(new URI(uri))
@@ -569,25 +571,50 @@ public class Session {
 				final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
 				if (response.statusCode() == 200) {
-					final GitHubCommittedFiles files = new JSON<>(GitHubCommittedFiles.class).parse(response.body());
-
-					// Test now against prefixes
+					// prepare prefixes
 					final String[] prefixes = prefixList.split(",");
 
-					final int filesNumber = files.getFiles().length;
-					int filesMatchingAnyPrefix = 0;
+					final GitHubPullRequestCommits[] commits = new JSONArray<>(GitHubPullRequestCommits[].class).parse(response.body());
 
-					for (GitHubFilename filename : files.getFiles()) {
-						final String filenameToTest = filename.getFilename();
-						for (String prefix : prefixes) {
-							if (filenameToTest.startsWith(prefix)) {
-								filesMatchingAnyPrefix++;
-								break;
+					System.out.println("Pull Request contains "+commits.length+" commit(s).");
+
+					int totalFilesNumber = 0;
+					int totalFilesMatchingAnyPrefix = 0;
+
+					for(GitHubPullRequestCommits commit : commits) {
+						final HttpRequest committedFilesRequest = HttpRequest.newBuilder()
+								.uri(new URI(commit.getUrl()))
+								.headers("Accept", "application/vnd.github+json",
+										"Pragma", "no-cache",
+										"Cache-Control", "no-store",
+										"User-Agent", "setup-testpilot/" + Main.VERSION)
+								.GET()
+								.build();
+
+						final HttpResponse<String> committedFilesResponse = client.send(committedFilesRequest, HttpResponse.BodyHandlers.ofString());
+
+						if (committedFilesResponse.statusCode() == 200) {
+							final GitHubCommittedFiles files = new JSON<>(GitHubCommittedFiles.class).parse(committedFilesResponse.body());
+
+							totalFilesNumber += files.getFiles().length;
+
+							for (GitHubFilename filename : files.getFiles()) {
+								final String filenameToTest = filename.getFilename();
+								for (String prefix : prefixes) {
+									if (filenameToTest.startsWith(prefix)) {
+										totalFilesMatchingAnyPrefix++;
+										break;
+									}
+								}
 							}
 						}
 					}
 
-					if (filesNumber == filesMatchingAnyPrefix) {
+					System.out.println("File(s) analyzed: "+totalFilesNumber+".");
+					System.out.println("File(s) matching avoidance prefix(es): "+totalFilesMatchingAnyPrefix+".");
+
+					if (totalFilesNumber == totalFilesMatchingAnyPrefix) {
+						System.out.println("Safe to skip tests? ==> YES");
 						if(githubOutput != null) {
 							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
 								out.println("skip_tests=yes");
@@ -596,6 +623,7 @@ public class Session {
 						System.exit(0);
 					}
 					else {
+						System.out.println("Safe to skip tests? ==> NO");
 						if(githubOutput != null) {
 							try (PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(githubOutput, true)))) {
 								out.println("skip_tests=no");
@@ -603,6 +631,7 @@ public class Session {
 						}
 						System.exit(0);
 					}
+
 				}
 				else {
 					throw new TestPilotException(SKIP_TESTING_REST_ENDPOINT_ISSUE,

@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.20'
+    default: 'v1.0.21'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -44,7 +44,7 @@ outputs:
     value: ${{ steps.create_or_delete.outputs.connection_string_suffix }}
   skip_tests:
     description: 'Should skip tests?'
-    value: ${{ steps.analyze_commit.outputs.skip_tests }}
+    value: ${{ steps.analyze_commits.outputs.skip_tests }}
 
 runs:
   using: 'composite'
@@ -55,15 +55,15 @@ runs:
         VERSION: ${{ inputs.version }}
       run: ${GITHUB_ACTION_PATH}/setup-test.sh
 
-    - name: 'Analyze commit'
-      id: analyze_commit
+    - name: 'Analyze commits'
+      id: analyze_commits
       if: inputs.action == 'skip-testing'
       shell: bash -leo pipefail {0}
       env:
         RUNID: ${{ github.run_number }}
       run: |
         ${GITHUB_ACTION_PATH}/setup-testpilot --skip-testing \
-        --owner "${{ github.repository_owner }}" --repository "${{ github.event.repository.name }}" --sha "${{ github.sha }}" \
+        --owner "${{ github.repository_owner }}" --repository "${{ github.event.repository.name }}" --pull-request-number "${{ github.event.pull_request.number }}" \
         --prefix-list "${{ inputs.prefix_list }}"
 
     - name: 'Create or Delete'

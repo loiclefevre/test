@@ -25,7 +25,6 @@ public class TestPilotException extends RuntimeException {
 	public static final int CREATE_DATABASE_MISSING_DB_TYPE = 12;
 	public static final int SKIP_TESTING_MISSING_OWNER = 13;
 	public static final int SKIP_TESTING_MISSING_REPOSITORY = 14;
-	public static final int SKIP_TESTING_MISSING_SHA = 15;
 	public static final int SKIP_TESTING_MISSING_PREFIX_LIST = 16;
 	public static final int SKIP_TESTING_WRONG_URI = 17;
 	public static final int SKIP_TESTING_WRONG_REST_CALL = 18;
@@ -36,7 +35,8 @@ public class TestPilotException extends RuntimeException {
 	public static final int PREFIX_LIST_MISSING_PARAMETER = 23;
 	public static final int OWNER_MISSING_PARAMETER = 24;
 	public static final int REPOSITORY_MISSING_PARAMETER = 25;
-	public static final int SHA_MISSING_PARAMETER = 26;
+	public static final int PULL_REQUEST_NUMBER_MISSING_PARAMETER = 27;
+	public static final int SKIP_TESTING_MISSING_PULL_REQUEST_NUMBER = 28;
 	public static final int DROP_DATABASE_WRONG_USER_NAME_LENGTH = 30;
 	public static final int DROP_DATABASE_WRONG_USER_NAME = 31;
 	public static final int DROP_DATABASE_MISSING_USER_NAME = 32;
