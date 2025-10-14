@@ -9,7 +9,7 @@ branding:
 inputs:
   version:
     description: 'The version to use.'
-    default: 'v1.0.21'
+    default: 'v1.0.22'
     required: true
   action:
     description: 'The action to run (create*, delete, skip-testing).'
@@ -17,7 +17,7 @@ inputs:
     required: true
   oci-service:
     description: 'The Oracle Cloud Infrastructure service to test.'
-    default: 'autonomous-transaction-processing-serverless'
+    default: 'autonomous-transaction-processing-serverless-26ai'
     required: true
   user:
     description: 'The database username to be used for database creation. If multiple users (up to 10) are required then enter a comma-separated list of usernames (no space). Limit usernames to 118 chars maximum. Accepted chars are: upper case letters, lower case letters, digits, colon, hyphen, and underscore.'
